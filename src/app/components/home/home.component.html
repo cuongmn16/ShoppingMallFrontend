@@ -1,0 +1,65 @@
+<div class="main-content">
+  <section class="featured-products">
+    <div class="product-highlight">
+      <h2>The Best Place to Play</h2>
+      <p>Xbox Consoles<br>Save up to 50% on select Xbox Consoles<br>Get 3 months of PC Game Pass for $2</p>
+      <img src="xbox-console.jpg" alt="Xbox Console">
+      <button class="shop-now">SHOP NOW</button>
+    </div>
+    <div class="product-highlight">
+      <h2>Summer Sales</h2>
+      <p>New Google Pixel 6 Pro</p>
+      <img src="google-pixel.jpg" alt="Google Pixel 6 Pro">
+      <button class="shop-now">SHOP NOW</button>
+    </div>
+    <div class="product-highlight">
+      <h2>Xiaomi FlipBuds Pro</h2>
+      <p>$29 USD</p>
+      <img src="flipbuds-pro.jpg" alt="Xiaomi FlipBuds Pro">
+      <button class="shop-now">SHOP NOW</button>
+    </div>
+  </section>
+
+  <section class="categories">
+    <h2>Shop with Categories</h2>
+    <div class="category-grid" >
+      <div class="category-item"  *ngFor="let category of categories" >
+        <div class="category-item-id" (click)="selectCategory(category.categoryId)">
+          <img [src]="category.iconUrl" alt="Computer & Laptop">
+          <p>{{category.categoryName}}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="discount-banner">
+    <h2>32% Discount</h2>
+    <p>For all electronics products<br>Offers end on CHRISTMAS</p>
+    <button class="shop-now">SHOP NOW</button>
+  </section>
+
+  <section class="featured-products-grid">
+    <h2>Featured Products</h2>
+    <div class="product-grid">
+      <div class="product-item" *ngFor="let product of products; trackBy: trackById">
+        <img [src]="product.productImage" [alt]="product.productName">
+        <p>{{ product.productName }}</p>
+        <p>{{ product.price | currency }}</p>
+        <div class="rating">★★★★☆</div>
+      </div>
+    </div>
+    <div *ngIf="isLoading" class="loading">Loading products...</div>
+    <div *ngIf="error" class="error">
+      {{ error }}
+      <button (click)="loadProducts()">Try Again</button>
+    </div>
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button (click)="previousPage()" [disabled]="pageNumber === 1">Previous</button>
+      <button *ngFor="let page of pageNumbers" (click)="goToPage(page)" [class.active]="page === pageNumber">
+        {{ page }}
+      </button>
+      <button (click)="nextPage()" [disabled]="pageNumber === totalPages">Next</button>
+    </div>
+  </section>
+</div>

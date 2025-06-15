@@ -1,0 +1,239 @@
+.header {
+  background-color: #007bff; /* Màu nền xanh */
+  color: white;
+  padding: 1rem 0;
+  position: fixed; /* Cố định header ở đầu trang */
+  top: 0;
+  width: 100%;
+  z-index: 1000; /* Đảm bảo header nằm trên các phần tử khác */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.header1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap; /* Cho phép các phần tử xuống dòng nếu cần */
+}
+
+.logo a {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: white;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-bar input {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  width: 200px; /* Độ rộng mặc định */
+}
+
+.search-bar button {
+  background-color: #28a745;
+  border: none;
+  padding: 0.5rem 1rem;
+  color: white;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.search-bar button:hover {
+  background-color: #218838;
+}
+
+.nav-menu ul {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-menu a {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.nav-menu a:hover {
+  text-decoration: underline;
+}
+
+.action-btn {
+  background-color: #dc3545;
+  border: none;
+  padding: 0.5rem 1rem;
+  color: white;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.action-btn:hover {
+  background-color: #c82333;
+}
+
+.header2 {
+  background-color: #0056b3; /* Màu nền đậm hơn cho header2 */
+  padding: 0.5rem 0;
+  margin-top: 1rem;
+}
+
+.menu ul {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  justify-content: center;
+}
+
+.menu a {
+  color: white;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.menu a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header1 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .search-bar input {
+    width: 100%; /* Thanh tìm kiếm chiếm toàn bộ chiều rộng */
+  }
+
+  .nav-menu ul {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .menu ul {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .action-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo a {
+    font-size: 1.2rem;
+  }
+
+  .search-bar input {
+    font-size: 0.9rem;
+  }
+
+  .search-bar button, .action-btn {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+/* Sub-header (Navigation bar) */
+.sub-header {
+  background-color: #0056b3;
+  padding: 10px 20px;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px; /* Khoảng cách giữa các liên kết */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  list-style: none; /* Loại bỏ dấu bullet của <li> */
+  margin: 0;
+  padding-left: 0; /* Loại bỏ padding mặc định của <ul> nếu có */
+}
+
+.sub-header li {
+  display: inline-flex; /* Hiển thị <li> theo hàng ngang */
+}
+
+.sub-header .menu-item {
+  color: white;
+  text-decoration: none;
+  font-family: 'Arial', sans-serif;
+  font-size: 1em;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+.sub-header .menu-item:hover {
+  color: #ffca2c; /* Màu vàng khi hover */
+  background-color: rgba(255, 202, 44, 0.1); /* Nền nhạt khi hover */
+  text-decoration: underline;
+}
+
+.sub-header li:last-child {
+  font-weight: 600;
+  margin-left: 20px; /* Tách số điện thoại ra */
+  padding: 5px 10px; /* Giữ đồng nhất với các liên kết */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sub-header {
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .sub-header li {
+    width: 100%; /* Đảm bảo <li> chiếm toàn bộ chiều rộng */
+  }
+
+  .sub-header .menu-item {
+    font-size: 0.9em;
+    padding: 5px;
+    text-align: center;
+  }
+
+  .sub-header li:last-child {
+    margin-left: 0;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .sub-header .menu-item {
+    font-size: 0.8em;
+  }
+
+
+}
+
+.menu-item{
+
+}
