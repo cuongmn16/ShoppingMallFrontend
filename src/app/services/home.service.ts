@@ -3,6 +3,7 @@ import {HttpClient} from '@angular/common/http';
 import {map, Observable} from 'rxjs';
 import {Category} from '../models/category';
 import {Product} from '../models/product';
+import {ProductDetail} from '../models/detail-product';
 
 interface ApiResponse<T> {
   result: T;
@@ -31,6 +32,10 @@ export class HomeService {
   getAllProductsByCategory(categoryId: number, pageNumber: number, pageSize: number): Observable<ApiResponse<Product[]>> {
     const params = { pageNumber: pageNumber.toString(), pageSize: pageSize.toString() };
     return this.httpClient.get<ApiResponse<Product[]>>(`${this.baseUrl}/products/category/${categoryId}`, { params });
+  }
+
+  getProductDetail(productId: number): Observable<ApiResponse<ProductDetail>> {
+    return this.httpClient.get<ApiResponse<ProductDetail>>(`${this.baseUrl}/products/${productId}`);
   }
 
 }

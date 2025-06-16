@@ -99,7 +99,11 @@ export class HomeComponent implements OnInit,OnDestroy  {
   }
 
   selectCategory(categoryId: number): void {
-    this.router.navigate(['category', categoryId]);
+    this.router.navigate(['/category', categoryId]);
+  }
+
+  NavigateToDetailProduct(productId: number){
+    this.router.navigate((['/detail-product', productId]));
   }
 
 

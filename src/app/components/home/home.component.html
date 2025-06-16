@@ -43,12 +43,21 @@
     <h2>Featured Products</h2>
     <div class="product-grid">
       <div class="product-item" *ngFor="let product of products; trackBy: trackById">
-        <img [src]="product.productImage" [alt]="product.productName">
-        <p>{{ product.productName }}</p>
-        <p>{{ product.price | currency }}</p>
-        <div class="rating">★★★★☆</div>
+        <div (click)="NavigateToDetailProduct(product.productId)" class="product-item-id">
+          <img [src]="product.productImage" [alt]="product.productName">
+          <h3 class="product-name">{{ product.productName }}</h3>
+          <div class="item">
+            <div class="price-common">
+              <span class="price">{{ product.price }}Đ </span>
+              <span class="discount">{{ product.discount }}%</span>
+            </div>
+            <span class="sold-quantity">{{ product.soldQuantity}}k bán</span>
+          </div>
+          <div class="rating">★★★★☆</div>
+        </div>
       </div>
     </div>
+
     <div *ngIf="isLoading" class="loading">Loading products...</div>
     <div *ngIf="error" class="error">
       {{ error }}

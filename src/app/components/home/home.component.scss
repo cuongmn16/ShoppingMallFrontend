@@ -124,8 +124,46 @@ body {
   object-fit: cover;
 }
 
+.product-name{
+  font-size: 16px;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 5px;
+}
+
+
+.item{
+  margin-top: -15px;
+  justify-content: space-between;
+  display: flex;
+
+}
+
+.price-common{
+
+}
+
+.price {
+  color: #ff4500;
+  font-size: 16.5px;
+  margin: 5px 0;
+}
+
+.sold-quantity{
+  color: #8f8f8f;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.discount {
+  color: #8f8f8f;
+  font-weight: bold;
+  font-size: 12px;
+}
+
 .rating {
   color: gold;
+  text-align: left;
 }
 
 .loading {

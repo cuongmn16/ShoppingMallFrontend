@@ -13,7 +13,7 @@ import {CommonModule} from '@angular/common';
   styleUrl: './category.component.scss'
 })
 export class CategoryComponent implements OnInit{
-  constructor( @Inject(PLATFORM_ID) private platformId: Object,private router: Router, private homeService: HomeService,
+  constructor(private router: Router, private homeService: HomeService,
   private route : ActivatedRoute) { }
   categoryId!: number;
   products : Product[] = [];
@@ -87,8 +87,9 @@ export class CategoryComponent implements OnInit{
     return product.productId;
   }
 
-  selectCategory(categoryId: number): void {
-    this.router.navigate(['category', categoryId]);
+  navigateToDetailProduct(productId: number): void {
+    this.router.navigate(['/detail-product', productId]);
   }
+
 
 }

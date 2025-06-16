@@ -1,10 +1,10 @@
 import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {Router} from '@angular/router';
+import {Router, RouterModule} from '@angular/router';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule],
+  imports: [CommonModule,RouterModule ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
@@ -13,10 +13,6 @@ export class HeaderComponent implements OnInit {
 
   ngOnInit(): void {
 
-  }
-
-  navigateHome(): void {
-    this.router.navigate([' ']);
   }
 
 }
