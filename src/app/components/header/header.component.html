@@ -16,7 +16,32 @@
           <li><a href="/contact">Contact</a></li>
         </ul>
       </nav>
-      <button class="action-btn">Sign Up</button>
+      <div class="nav-tool">
+        <div class="user-menu-container">
+          <!-- Trạng thái CHƯA đăng nhập -->
+          <div *ngIf="!isLoggedIn()" class="auth-buttons">
+            <a [routerLink]="'/login'" class="auth-link">Đăng Nhập</a>
+            <span class="divider">|</span>
+            <a href="/register" class="auth-link">Đăng Ký</a>
+          </div>
+          <!-- Trạng thái ĐÃ đăng nhập -->
+          <div *ngIf="isLoggedIn()" class="user-profile">
+            <img
+              class="avatar"
+              alt="Avatar"
+              width="36"
+              height="36"
+              style="object-fit:cover; border:2px solid #eee;"
+              [src]="myInfo.avatarUrl"
+            />
+            <a [routerLink]="['/user-dashboard']">
+              <span class="username">{{myInfo.fullName}}</span>
+            </a>
+            <span class="divider">|</span>
+            <span class="verified">✓</span>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="header2">
       <nav class="menu">

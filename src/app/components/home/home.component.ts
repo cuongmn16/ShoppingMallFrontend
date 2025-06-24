@@ -2,7 +2,7 @@ import {AfterViewInit, Component, ElementRef, Inject, OnDestroy, OnInit, PLATFOR
 import {HomeService} from '../../services/home.service';
 import {Category} from '../../models/category';
 import {CommonModule, isPlatformBrowser} from '@angular/common';
-import {Router} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {HttpClientModule} from '@angular/common/http';
 import {Product} from '../../models/product';
 import {Subject, takeUntil} from 'rxjs';
@@ -15,7 +15,7 @@ import {Subject, takeUntil} from 'rxjs';
   styleUrl: './home.component.scss'
 })
 export class HomeComponent implements OnInit,OnDestroy  {
-  constructor( @Inject(PLATFORM_ID) private platformId: Object,private router: Router, private homeService: HomeService) { }
+  constructor( private route: ActivatedRoute,private router: Router, private homeService: HomeService) { }
   categories : Category[] = [];
   products : Product[] = [];
   pageNumber = 1;
@@ -27,7 +27,11 @@ export class HomeComponent implements OnInit,OnDestroy  {
 
   ngOnInit(): void {
     this.getAllCategories();
-    this.loadProducts();
+    this.route.queryParams.subscribe(params => {
+      const page = parseInt(params['page'], 10) || 1;
+      this.pageNumber = page;
+      this.loadProducts(page);
+    });
   }
 
   ngOnDestroy(): void {
@@ -71,9 +75,10 @@ export class HomeComponent implements OnInit,OnDestroy  {
   }
 
   goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages && page !== this.pageNumber) {
-      this.loadProducts(page);
-    }
+    this.router.navigate([], {
+      queryParams: { page },
+      queryParamsHandling: 'merge',
+    });
   }
 
   previousPage(): void {

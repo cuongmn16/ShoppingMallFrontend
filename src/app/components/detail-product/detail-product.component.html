@@ -24,21 +24,13 @@
         <div class="size">
           <label>SIZE</label>
           <select>
-            <option>S (40-48 kg)</option>
-            <option>M (49-56 kg)</option>
-            <option>L (57-64 kg)</option>
-            <option>XL (65-75 kg)</option>
-            <option>XXL (76-82 kg)</option>
-            <option>XXXL (83-92 kg)</option>
+            <option *ngFor="let size of getAttributeValues('size')" >{{size}}</option>
           </select>
         </div>
         <div class="color">
           <label>MÀU</label>
           <select>
-            <option>XÁM</option>
-            <option>VÀNG ĐẤT</option>
-            <option>XANH BÍCH</option>
-            <option>ĐỎ TƯỞI</option>
+            <option *ngFor="let color of getAttributeValues('color')"  >{{color}}</option>
           </select>
         </div>
         <div class="quantity">
@@ -61,10 +53,10 @@
     <!-- Thông tin shop -->
     <div class="shop-container">
       <div class="shop-logo">
-        <img src="https://via.placeholder.com/50" alt="Shop Logo">
+        <img [src]="productDetail?.shopLogo" alt="Shop Logo">
       </div>
       <div class="shop-info">
-        <div class="shop-name">DiHu fashion</div>
+        <div class="shop-name">{{productDetail?.shopName}}</div>
         <div class="shop-status">Online 51 Phút Trước</div>
         <div class="shop-stats">
           <div>
