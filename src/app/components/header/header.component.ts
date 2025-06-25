@@ -33,16 +33,7 @@ export class HeaderComponent implements OnInit {
   faTools = faTools;
   faEnvelope = faEnvelope;
 
-  // User information
-  myInfo: UserInfo = {
-    fullName: 'John Doe',
-    avatarUrl: 'https://i.pravatar.cc/150?img=12',
-    isVerified: true
-  };
-
-  // Auth token (simulate storage)
-  private authToken: string | null = null;
-
+  myInfo!: UserResponse;
   constructor(private router: Router,
               private userService: UserService,
               @Inject(PLATFORM_ID) private platformId: Object) { }
@@ -59,41 +50,13 @@ export class HeaderComponent implements OnInit {
   }
 
   loadMyInfo(): void{
-    // Only try to load user info if user is logged in
-    if (this.isLoggedIn()) {
-      this.userService.getMyInfo().subscribe({
-        next: (response: ApiResponse<UserResponse>) => {
-          if (response && response.result) {
-            this.myInfo = {
-              fullName: response.result.fullName,
-              avatarUrl: response.result.avatarUrl || 'https://i.pravatar.cc/150?img=12',
-              email: response.result.email,
-              isVerified: true
-            };
-          }
-        },
-        error: (error) => {
-          console.error('Failed to fetch user info', error);
-          // Keep default user info on error
-        }
-      });
-    }
-  }
-
-  // Navigation methods
-  navigateToCart(): void {
-    this.router.navigate(['/cart']);
-  }
-
-  navigateToAbout(): void {
-    this.router.navigate(['/about']);
-  }
-
-  navigateToContact(): void {
-    this.router.navigate(['/contact']);
-  }
-
-  navigateToService(): void {
-    this.router.navigate(['/services']);
+    this.userService.getMyInfo().subscribe({
+      next: (response: ApiResponse<UserResponse>) => {
+        this.myInfo = response.result;
+      },
+      error: (error) => {
+        console.error('Failed to fetch user info', error);
+      }
+    });
   }
 }
