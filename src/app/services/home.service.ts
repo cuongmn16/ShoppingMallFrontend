@@ -38,4 +38,16 @@ export class HomeService {
     return this.httpClient.get<ApiResponse<ProductDetail>>(`${this.baseUrl}/products/${productId}`);
   }
 
+  getCategoriesByParentId(parentId: number): Observable<Category[]> {
+    return this.httpClient
+      .get<{ code: number; result: Category[] }>(`${this.baseUrl}/categories/parent/${parentId}`)
+      .pipe(map(response => response.result));
+  }
+
+  getRootCategories(): Observable<Category[]> {
+    return this.httpClient
+      .get<{ code: number; result: Category[] }>(`${this.baseUrl}/categories/parent-null`)
+      .pipe(map(response => response.result));
+  }
+
 }

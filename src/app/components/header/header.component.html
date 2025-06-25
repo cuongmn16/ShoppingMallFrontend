@@ -10,10 +10,26 @@
       </div>
       <nav class="nav-menu">
         <ul>
-          <li><a href="/home">Cart</a></li>
-          <li><a href="/about">About</a></li>
-          <li><a href="/services">Services</a></li>
-          <li><a href="/contact">Contact</a></li>
+          <li>
+            <a [routerLink]="'/cart'">
+              <fa-icon [icon]="faCartShopping"></fa-icon>
+            </a>
+          </li>
+          <li>
+            <a [routerLink]="'/about'">
+              <fa-icon [icon]="faInfoCircle"></fa-icon>
+            </a>
+          </li>
+          <li>
+            <a [routerLink]="'/services'">
+              <fa-icon [icon]="faTools"></fa-icon>
+            </a>
+          </li>
+          <li>
+            <a [routerLink]="'/contact'">
+              <fa-icon [icon]="faEnvelope"></fa-icon>
+            </a>
+          </li>
         </ul>
       </nav>
       <button class="action-btn">Sign Up</button>

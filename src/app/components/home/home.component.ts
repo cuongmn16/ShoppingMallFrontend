@@ -6,6 +6,7 @@ import {Router} from '@angular/router';
 import {HttpClientModule} from '@angular/common/http';
 import {Product} from '../../models/product';
 import {Subject, takeUntil} from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-home',
@@ -15,7 +16,12 @@ import {Subject, takeUntil} from 'rxjs';
   styleUrl: './home.component.scss'
 })
 export class HomeComponent implements OnInit,OnDestroy  {
-  constructor( @Inject(PLATFORM_ID) private platformId: Object,private router: Router, private homeService: HomeService) { }
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private router: Router,
+    private homeService: HomeService,
+    private http: HttpClient
+  ) { }
   categories : Category[] = [];
   products : Product[] = [];
   pageNumber = 1;
@@ -36,15 +42,16 @@ export class HomeComponent implements OnInit,OnDestroy  {
   }
 
   getAllCategories(): void {
-    this.homeService.getAllCategories().subscribe(
+    this.homeService.getRootCategories().subscribe(
       (data: Category[]) => {
         this.categories = data;
       },
       (error) => {
-        console.error('Error fetching categories:', error);
+        console.error('Error fetching root categories:', error);
       }
     );
   }
+
 
   loadProducts(pageNumber: number = this.pageNumber): void {
     if (this.isLoading) return;
@@ -106,6 +113,8 @@ export class HomeComponent implements OnInit,OnDestroy  {
     this.router.navigate((['/detail-product', productId]));
   }
 
-
+  getCategoriesByParentId(parentId: number) {
+    return this.http.get<Category[]>(`/api/categories/parent/${parentId}`);
+  }
 
 }

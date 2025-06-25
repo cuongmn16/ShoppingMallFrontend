@@ -3,6 +3,50 @@
     <h2>32% Discount</h2>
     <p>For all electronics products<br>Offers end on CHRISTMAS</p>
   </section>
+
+  <section class="categories" *ngIf="categories.length > 0">
+    <h2>Categories</h2>
+    <div class="category-slider-container">
+      <button class="slider-arrow prev-arrow" (click)="slidePrev()" [class.disabled]="currentSlide === 0">
+        <i class="fa fa-chevron-left"></i>
+      </button>
+
+      <div class="category-slider">
+        <div class="category-slider-track" [style.transform]="'translateX(' + (-currentSlide * 100) + '%)'">
+          <div class="category-row">
+            <div class="category-item" *ngFor="let category of visibleCategories.slice(0, 5)">
+              <div class="category-item-id" (click)="selectCategory(category.categoryId)">
+                <img [src]="category.iconUrl" alt="{{category.categoryName}}">
+                <p>{{ category.categoryName }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="category-row">
+            <div class="category-item" *ngFor="let category of visibleCategories.slice(5, 10)">
+              <div class="category-item-id" (click)="selectCategory(category.categoryId)">
+                <img [src]="category.iconUrl" alt="{{category.categoryName}}">
+                <p>{{ category.categoryName }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="slider-arrow next-arrow" (click)="slideNext()" [class.disabled]="currentSlide === maxSlides">
+        <i class="fa fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <div class="slider-dots">
+    <span
+      *ngFor="let dot of slideDots; let i = index"
+      class="dot"
+      [class.active]="i === currentSlide"
+      (click)="goToSlide(i)">
+    </span>
+    </div>
+  </section>
+
   <section class="featured-products-grid">
     <h2>All Products</h2>
     <div class="product-grid">
@@ -12,7 +56,7 @@
           <h3 class="product-name">{{ product.productName }}</h3>
           <div class="item">
             <div class="price-common">
-              <span class="price">{{ product.price }}Đ </span>
+              <span class="price">{{ product.price }} </span>
               <span class="discount">{{ product.discount }}%</span>
             </div>
             <span class="sold-quantity">{{ product.soldQuantity}}k bán</span>
