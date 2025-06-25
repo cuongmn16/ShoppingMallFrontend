@@ -61,29 +61,21 @@ export class CategoryComponent implements OnInit {
 
   updateSliderProperties(): void {
     // Calculate how many total slides we need (each slide shows 10 categories - 5 per row)
-    this.maxSlides = Math.ceil(this.categories.length / 10) - 1;
-    this.maxSlides = Math.max(0, this.maxSlides); // Ensure it's at least 0
+    this.maxSlides = Math.max(0, Math.ceil(this.categories.length / 10) - 1);
 
     // Create dots array for pagination
     this.slideDots = Array(this.maxSlides + 1).fill(0).map((_, i) => i);
 
-    // Update visible categories
+    // Initialize visible categories
     this.updateVisibleCategories();
   }
 
+
   updateVisibleCategories(): void {
     const startIndex = this.currentSlide * 10;
-    this.visibleCategories = this.categories.slice(startIndex, startIndex + 10);
+    const endIndex = startIndex + 10;
+    this.visibleCategories = this.categories.slice(startIndex, endIndex);
 
-    // Pad with empty categories if needed to maintain layout
-    while (this.visibleCategories.length < 10) {
-      this.visibleCategories.push({
-        categoryId: -1,
-        categoryName: '',
-        iconUrl: 'assets/placeholder.png',
-        // Add any other required properties with default values
-      } as Category);
-    }
   }
 
   loadProducts(pageNumber: number = this.pageNumber): void {

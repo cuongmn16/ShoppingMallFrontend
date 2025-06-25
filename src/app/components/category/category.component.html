@@ -12,25 +12,28 @@
       </button>
 
       <div class="category-slider">
-        <div class="category-slider-track" [style.transform]="'translateX(' + (-currentSlide * 100) + '%)'">
-          <div class="category-row">
-            <div class="category-item" *ngFor="let category of visibleCategories.slice(0, 5)">
-              <div class="category-item-id" (click)="selectCategory(category.categoryId)">
-                <img [src]="category.iconUrl" alt="{{category.categoryName}}">
-                <p>{{ category.categoryName }}</p>
+        <div class="category-slider-track" [style.transform]="'translateX(-' + (currentSlide * 100) + '%)'">
+          <div class="slider-page" *ngFor="let page of slideDots; let i = index">
+            <div class="category-row">
+              <div class="category-item" *ngFor="let category of categories.slice(i * 10, i * 10 + 5)">
+                <div class="category-item-id" (click)="selectCategory(category.categoryId)" *ngIf="category">
+                  <img [src]="category.iconUrl" [alt]="category.categoryName">
+                  <p>{{ category.categoryName }}</p>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="category-row">
-            <div class="category-item" *ngFor="let category of visibleCategories.slice(5, 10)">
-              <div class="category-item-id" (click)="selectCategory(category.categoryId)">
-                <img [src]="category.iconUrl" alt="{{category.categoryName}}">
-                <p>{{ category.categoryName }}</p>
+            <div class="category-row">
+              <div class="category-item" *ngFor="let category of categories.slice(i * 10 + 5, (i + 1) * 10)">
+                <div class="category-item-id" (click)="selectCategory(category.categoryId)" *ngIf="category">
+                  <img [src]="category.iconUrl" [alt]="category.categoryName">
+                  <p>{{ category.categoryName }}</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
 
       <button class="slider-arrow next-arrow" (click)="slideNext()" [class.disabled]="currentSlide === maxSlides">
         <i class="fa fa-chevron-right"></i>

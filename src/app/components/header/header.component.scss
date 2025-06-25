@@ -552,3 +552,233 @@ $font-primary: 'Poppins', sans-serif;
     }
   }
 }
+
+// User Menu Navigation Styles
+.nav-tool {
+  margin-left: 1.5rem;
+  position: relative;
+
+  @media (max-width: 992px) {
+    margin: 0.8rem 0 0;
+    width: 100%;
+  }
+}
+
+.user-menu-container {
+  position: relative;
+  z-index: 10;
+
+  &:hover {
+    .auth-buttons, .user-profile {
+      box-shadow: $shadow-md;
+      transform: translateY(-3px);
+    }
+  }
+}
+
+// Not logged in styles
+.auth-buttons {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 25px;
+  padding: 0.5rem 1.2rem;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  .auth-link {
+    color: $white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: 15px;
+    transition: all 0.2s ease;
+    letter-spacing: 0.3px;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, $accent-light, transparent);
+      transform: scaleX(0);
+      transform-origin: center;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover {
+      color: $accent-light;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+
+      &::before {
+        transform: scaleX(1);
+      }
+    }
+  }
+
+  .divider {
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 300;
+  }
+}
+
+// Logged in styles
+.user-profile {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08));
+  border-radius: 25px;
+  padding: 0.3rem 0.3rem 0.3rem 0.3rem;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover::before {
+    opacity: 1;
+    animation: shineEffect 2s infinite;
+  }
+
+  @keyframes shineEffect {
+    0% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(3); opacity: 0.1; }
+    100% { transform: scale(1); opacity: 0.3; }
+  }
+
+  .avatar {
+    border-radius: 50%;
+    margin-right: 0.7rem;
+    transition: transform 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+
+    &:hover {
+      transform: scale(1.1) rotate(5deg);
+    }
+  }
+
+  a {
+    text-decoration: none;
+    padding: 0 0.5rem;
+
+    .username {
+      color: $white;
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 0.3px;
+      transition: all 0.2s ease;
+      display: inline-block;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+      &:hover {
+        color: $accent-light;
+        transform: translateY(-2px);
+      }
+    }
+  }
+
+  .divider {
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0 0.5rem;
+  }
+
+  .verified {
+    color: $success-color;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    margin-left: 0.3rem;
+    margin-right: 0.5rem;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: $success-color;
+      color: white;
+      transform: rotate(360deg);
+    }
+  }
+}
+
+// Responsive adaptations for the user menu
+@media (max-width: 768px) {
+  .nav-tool {
+    order: 2;
+    margin: 1rem auto;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .auth-buttons, .user-profile {
+    width: 100%;
+    max-width: 300px;
+    justify-content: center;
+  }
+
+  .user-profile a .username {
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-buttons {
+    padding: 0.4rem 1rem;
+
+    .auth-link {
+      font-size: 0.85rem;
+    }
+  }
+
+  .user-profile {
+    padding: 0.2rem;
+
+    .avatar {
+      margin-right: 0.4rem;
+      width: 32px;
+      height: 32px;
+    }
+
+    a .username {
+      font-size: 0.85rem;
+      max-width: 80px;
+    }
+
+    .verified {
+      width: 20px;
+      height: 20px;
+      font-size: 0.8rem;
+    }
+  }
+}

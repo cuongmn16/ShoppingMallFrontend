@@ -164,9 +164,13 @@ $font-primary: 'Poppins', sans-serif;
 
   .category-slider-track {
     display: flex;
-    flex-direction: column;
     width: 100%;
     transition: transform 0.5s ease-out;
+  }
+
+  .slider-page {
+    min-width: 100%;
+    flex: 0 0 100%;
   }
 
   .category-row {
