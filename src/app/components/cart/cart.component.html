@@ -1,0 +1,173 @@
+<div class="cart-container">
+  <div class="cart-header">
+    <h1>Giỏ Hàng Của Bạn</h1>
+    <p class="subtitle">{{ cartItems.length }} sản phẩm</p>
+  </div>
+
+  <div class="cart-content" *ngIf="cartItems.length > 0">
+    <div class="cart-items">
+      <!-- Select all checkbox -->
+      <div class="select-all-container">
+        <label class="custom-checkbox">
+          <input type="checkbox"
+                 [checked]="allItemsSelected"
+                 (change)="toggleSelectAll()">
+          <span class="checkmark"></span>
+          <span class="select-all-text">Chọn tất cả ({{ cartItems.length }})</span>
+        </label>
+        <button class="remove-selected" *ngIf="hasSelectedItems()" (click)="removeSelectedItems()">
+          <fa-icon [icon]="faTrash"></fa-icon> Xóa đã chọn
+        </button>
+      </div>
+
+      <!-- Cart item list -->
+      <div class="cart-item" *ngFor="let item of cartItems; let i = index">
+        <div class="item-select">
+          <label class="custom-checkbox">
+            <input type="checkbox"
+                   [checked]="item.selected"
+                   (change)="toggleSelectItem(i)">
+            <span class="checkmark"></span>
+          </label>
+        </div>
+
+        <div class="item-image">
+          <img [src]="item.image" [alt]="item.name">
+        </div>
+
+        <div class="item-details">
+          <h3 class="item-name">{{ item.name }}</h3>
+          <p class="item-variant" *ngIf="item.variant">{{ item.variant }}</p>
+          <p class="item-price-mobile">{{ item.price | currency:'VND':'symbol':'1.0-0' }}</p>
+          <div class="item-actions-mobile">
+            <div class="quantity-controls">
+              <button (click)="decreaseQuantity(i)" [disabled]="item.quantity <= 1">
+                <fa-icon [icon]="faMinus"></fa-icon>
+              </button>
+              <span>{{ item.quantity }}</span>
+              <button (click)="increaseQuantity(i)">
+                <fa-icon [icon]="faPlus"></fa-icon>
+              </button>
+            </div>
+            <button class="remove-item" (click)="removeItem(i)">
+              <fa-icon [icon]="faTrash"></fa-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="item-price">
+          <p>{{ item.price | currency:'VND':'symbol':'1.0-0' }}</p>
+          <p class="original-price" *ngIf="item.originalPrice">{{ item.originalPrice | currency:'VND':'symbol':'1.0-0' }}</p>
+        </div>
+
+        <div class="item-quantity">
+          <div class="quantity-controls">
+            <button (click)="decreaseQuantity(i)" [disabled]="item.quantity <= 1">
+              <fa-icon [icon]="faMinus"></fa-icon>
+            </button>
+            <span>{{ item.quantity }}</span>
+            <button (click)="increaseQuantity(i)">
+              <fa-icon [icon]="faPlus"></fa-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="item-total">
+          <p>{{ item.price * item.quantity | currency:'VND':'symbol':'1.0-0' }}</p>
+        </div>
+
+        <div class="item-actions">
+          <button class="remove-item" (click)="removeItem(i)">
+            <fa-icon [icon]="faTrash"></fa-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cart summary -->
+    <div class="cart-summary">
+      <div class="summary-header">
+        <h2>Tóm Tắt Đơn Hàng</h2>
+      </div>
+
+      <div class="summary-content">
+        <div class="summary-row">
+          <span>Tạm tính ({{ selectedItemsCount() }} sản phẩm)</span>
+          <span>{{ getSubtotal() | currency:'VND':'symbol':'1.0-0' }}</span>
+        </div>
+
+        <div class="summary-row" *ngIf="discount > 0">
+          <span>Giảm giá</span>
+          <span>{{ discount | currency:'VND':'symbol':'1.0-0' }}</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Phí vận chuyển</span>
+          <span *ngIf="shippingFee > 0">{{ shippingFee | currency:'VND':'symbol':'1.0-0' }}</span>
+          <span *ngIf="shippingFee === 0" class="free-shipping">Miễn phí</span>
+        </div>
+
+        <div class="coupon-section">
+          <div class="coupon-input">
+            <input type="text" placeholder="Mã giảm giá" [(ngModel)]="couponCode">
+            <button [disabled]="!couponCode" (click)="applyCoupon()">Áp dụng</button>
+          </div>
+          <p class="coupon-message" *ngIf="couponMessage">{{ couponMessage }}</p>
+        </div>
+
+        <div class="summary-total">
+          <span>Tổng thanh toán</span>
+          <span>{{ getTotal() | currency:'VND':'symbol':'1.0-0' }}</span>
+        </div>
+
+        <button class="checkout-button" [disabled]="selectedItemsCount() === 0" (click)="proceedToCheckout()">
+          <span>Thanh Toán</span>
+          <fa-icon [icon]="faArrowRight"></fa-icon>
+        </button>
+
+        <div class="continue-shopping">
+          <a [routerLink]="['/']">
+            <fa-icon [icon]="faArrowLeft"></fa-icon>
+            <span>Tiếp tục mua sắm</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty cart state -->
+  <div class="empty-cart" *ngIf="cartItems.length === 0">
+    <div class="empty-cart-content">
+      <fa-icon [icon]="faCartShopping" class="empty-cart-icon"></fa-icon>
+      <h2>Giỏ hàng của bạn đang trống</h2>
+      <p>Hãy thêm sản phẩm vào giỏ hàng để tiếp tục mua sắm</p>
+      <button class="continue-shopping-btn" [routerLink]="['/']">
+        <span>Tiếp tục mua sắm</span>
+        <fa-icon [icon]="faArrowRight"></fa-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Recommended products -->
+  <div class="recommended-products" *ngIf="recommendedProducts.length > 0">
+    <h2>Có thể bạn cũng thích</h2>
+    <div class="product-grid">
+      <div class="product-card" *ngFor="let product of recommendedProducts">
+        <div class="product-image">
+          <img [src]="product.image" [alt]="product.name">
+        </div>
+        <div class="product-info">
+          <h3>{{ product.name }}</h3>
+          <div class="product-price">
+            <span class="current-price">{{ product.price | currency:'VND':'symbol':'1.0-0' }}</span>
+            <span class="original-price" *ngIf="product.originalPrice">{{ product.originalPrice | currency:'VND':'symbol':'1.0-0' }}</span>
+          </div>
+          <button class="add-to-cart-btn" (click)="addToCart(product)">
+            <fa-icon [icon]="faCartPlus"></fa-icon>
+            <span>Thêm vào giỏ</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

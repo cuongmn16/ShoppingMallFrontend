@@ -1,8 +1,12 @@
-import {Component, OnInit} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import {Component, Inject, OnInit, PLATFORM_ID} from '@angular/core';
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {Router, RouterModule} from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faCartShopping, faInfoCircle, faTools, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import {ApiResponse} from '../../models/api-response';
+import {UserResponse} from '../../models/response/user-response';
+import { UserService } from '../../services/user.service';
+
 
 interface UserInfo {
   fullName: string;
@@ -55,14 +59,25 @@ export class HeaderComponent implements OnInit {
   }
 
   loadMyInfo(): void{
-    this.userService.getMyInfo().subscribe({
-      next: (response: ApiResponse<UserResponse>) => {
-        this.myInfo = response.result;
-      },
-      error: (error) => {
-        console.error('Failed to fetch user info', error);
-      }
-    });
+    // Only try to load user info if user is logged in
+    if (this.isLoggedIn()) {
+      this.userService.getMyInfo().subscribe({
+        next: (response: ApiResponse<UserResponse>) => {
+          if (response && response.result) {
+            this.myInfo = {
+              fullName: response.result.fullName,
+              avatarUrl: response.result.avatarUrl || 'https://i.pravatar.cc/150?img=12',
+              email: response.result.email,
+              isVerified: true
+            };
+          }
+        },
+        error: (error) => {
+          console.error('Failed to fetch user info', error);
+          // Keep default user info on error
+        }
+      });
+    }
   }
 
   // Navigation methods
