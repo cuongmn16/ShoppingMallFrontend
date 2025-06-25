@@ -1,0 +1,72 @@
+<div class="container">
+  <div class="login-container">
+    <h2>Đăng Nhập</h2>
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="input-group">
+        <label for="username">Tên đăng nhập</label>
+        <input
+          type="text"
+          id="username"
+          formControlName="username"
+          [ngClass]="{'is-invalid': username?.touched && username?.invalid}"
+          placeholder="Nhập tên đăng nhập"
+          required
+        >
+        <div class="invalid-feedback" *ngIf="username?.touched && username?.hasError('required')">
+          Tên đăng nhập là bắt buộc.
+        </div>
+        <div class="invalid-feedback" *ngIf="username?.touched && username?.hasError('minlength')">
+          Tên đăng nhập phải có ít nhất 3 ký tự.
+        </div>
+        <div class="invalid-feedback" *ngIf="username?.touched && username?.hasError('usernameTaken')">
+          Tên đăng nhập đã được sử dụng.
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="password">Mật khẩu</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          [ngClass]="{'is-invalid': password?.touched && password?.invalid}"
+          placeholder="Nhập mật khẩu"
+          required
+        >
+        <div class="invalid-feedback" *ngIf="password?.touched && password?.hasError('required')">
+          Mật khẩu là bắt buộc.
+        </div>
+        <div class="invalid-feedback" *ngIf="password?.touched && password?.hasError('minlength')">
+          Mật khẩu phải có ít nhất 6 ký tự.
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="confirm-password">Xác nhận mật khẩu</label>
+        <input
+          type="password"
+          id="confirm-password"
+          formControlName="confirmPassword"
+          [ngClass]="{'is-invalid': confirmPassword?.touched && confirmPassword?.invalid}"
+          placeholder="Xác nhận mật khẩu"
+          required
+        >
+        <div class="invalid-feedback" *ngIf="confirmPassword?.touched && confirmPassword?.hasError('passwordMismatch')">
+          Mật khẩu không khớp.
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="login-btn"
+        [disabled]="loginForm.invalid || isLoading"
+      >
+        <span *ngIf="isLoading">Đang xử lý...</span>
+        <span *ngIf="!isLoading">Đăng Nhập</span>
+      </button>
+      <div class="forgot-password">
+        <a href="#">Quên mật khẩu?</a>
+      </div>
+    </form>
+  </div>
+</div>
