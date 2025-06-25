@@ -14,6 +14,8 @@ $border-radius: 6px;
 $transition-fast: all 0.2s ease-in-out;
 $transition-normal: all 0.3s ease-in-out;
 $font-primary: 'Poppins', sans-serif;
+@use 'sass:color';
+
 
 // Mixins
 @mixin flex-center {
@@ -189,7 +191,7 @@ $font-primary: 'Poppins', sans-serif;
     padding: 0.75rem 1.2rem;
 
     &:hover {
-      background-color: darken($success-color, 5%);
+      background-color: color.adjust($primary-color, $lightness: -10%);
     }
   }
 }
@@ -272,7 +274,7 @@ $font-primary: 'Poppins', sans-serif;
   }
 
   &:hover {
-    background-color: darken($danger-color, 5%);
+    background-color: color.adjust($primary-color, $lightness: -10%);
 
     &::before {
       left: 100%;

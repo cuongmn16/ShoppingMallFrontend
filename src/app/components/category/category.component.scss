@@ -10,6 +10,8 @@ $border-radius: 12px;
 $box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 $transition-default: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 $font-primary: 'Poppins', sans-serif;
+@use 'sass:color';
+
 
 // Mixins
 @mixin section-container {
@@ -574,7 +576,7 @@ $font-primary: 'Poppins', sans-serif;
     font-weight: 600;
 
     &:hover {
-      background-color: darken(#f44336, 10%);
+      background-color: color.adjust($primary-color, $lightness: -10%);
       transform: translateY(-3px);
       box-shadow: 0 5px 15px rgba(#f44336, 0.3);
     }
@@ -622,7 +624,7 @@ $font-primary: 'Poppins', sans-serif;
       box-shadow: 0 4px 10px rgba($primary-color, 0.3);
 
       &:hover {
-        background: darken($primary-color, 5%);
+        background-color: color.adjust($primary-color, $lightness: -10%);
       }
     }
 
@@ -726,5 +728,5 @@ $font-primary: 'Poppins', sans-serif;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: darken($primary-color, 10%);
+  background-color: color.adjust($primary-color, $lightness: -10%);
 }
