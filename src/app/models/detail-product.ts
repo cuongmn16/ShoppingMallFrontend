@@ -1,6 +1,4 @@
 export interface ProductDetail {
-  code: number;
-  result: {
     productId: number;
     sellerId: number;
     categoryId: number;
@@ -14,10 +12,12 @@ export interface ProductDetail {
     rating: number;
     productStatus: string;
     productImage: string | null;
+    shopName: string;
+    shopDescription: string | null;
+    shopLogo: string | null;
     productImages: ProductImage[];
     productAttributes: ProductAttribute[];
     productVariations: ProductVariation[];
-  };
 }
 
 export interface ProductImage {
