@@ -11,6 +11,6 @@ export const routes: Routes = [
   { path: '', component: HomeComponent }, // Trang chủ
   { path: 'category/:categoryId', component: CategoryComponent },
   { path: 'detail-product/:productId', component: DetailProductComponent },
-  { path: 'login', component : LogInComponent},
+  { path: 'login', component : LogInComponent },
   { path: 'cart', component: CartComponent }
 ];

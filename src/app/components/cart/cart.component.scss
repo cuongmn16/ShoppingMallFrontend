@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 // Variables
 $primary-color: #1e88e5;
 $primary-dark: #0d47a1;
@@ -47,7 +49,7 @@ $transition: all 0.3s ease;
   gap: 8px;
 
   &:hover {
-    background-color: darken($bg-color, 8%);
+    background-color: color.adjust($bg-color, $lightness: -8%);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
   }
@@ -66,6 +68,7 @@ $transition: all 0.3s ease;
   margin: 0 auto;
   padding: 30px 20px 60px;
   font-family: 'Poppins', sans-serif;
+  margin: 120px auto 3rem auto;
 
   .cart-header {
     margin-bottom: 30px;
