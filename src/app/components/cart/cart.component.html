@@ -32,11 +32,11 @@
         </div>
 
         <div class="item-image">
-          <img [src]="item.image" [alt]="item.name">
+          <img [src]="item.productImage" [alt]="item.productName">
         </div>
 
         <div class="item-details">
-          <h3 class="item-name">{{ item.name }}</h3>
+          <h3 class="item-name">{{ item.productName }}</h3>
           <p class="item-variant" *ngIf="item.variant">{{ item.variant }}</p>
           <p class="item-price-mobile">{{ item.price | currency:'VND':'symbol':'1.0-0' }}</p>
           <div class="item-actions-mobile">
@@ -152,16 +152,16 @@
   <div class="recommended-products" *ngIf="recommendedProducts.length > 0">
     <h2>Có thể bạn cũng thích</h2>
     <div class="product-grid">
-      <div class="product-item" *ngFor="let product of products; trackBy: trackById">
-        <div (click)="NavigateToDetailProduct(product.productId)" class="product-item-id">
+      <div class="product-item" *ngFor="let product of recommendedProducts; trackBy: trackById">
+        <div (click)="navigateToDetail(product.productId)" class="product-item-id">
           <img [src]="product.productImage" [alt]="product.productName">
           <h3 class="product-name">{{ product.productName }}</h3>
           <div class="item">
             <div class="price-common">
-              <span class="price">{{ product.price }}Đ </span>
-              <span class="discount">{{ product.discount }}%</span>
+              <span class="price">{{ product.price | currency:'VND':'symbol':'1.0-0' }}</span>
+              <span class="discount" *ngIf="product.discount">{{ product.discount }}%</span>
             </div>
-            <span class="sold-quantity">{{ product.soldQuantity}}k bán</span>
+            <span class="sold-quantity" *ngIf="product.soldQuantity">{{ product.soldQuantity }}k bán</span>
           </div>
           <div class="rating">★★★★☆</div>
         </div>

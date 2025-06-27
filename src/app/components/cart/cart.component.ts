@@ -1,14 +1,16 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { Router, RouterModule } from '@angular/router';
 import { faCartShopping, faTrash, faMinus, faPlus, faArrowRight, faArrowLeft, faCartPlus } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { Subject, takeUntil } from 'rxjs';
+import { HomeService } from '../../services/home.service';
 
-interface CartItem {
-  id: number;
-  name: string;
-  image: string;
+export interface CartItem {
+  productId: number;
+  productName: string;
+  productImage: string;
   variant?: string;
   price: number;
   originalPrice?: number;
@@ -16,12 +18,14 @@ interface CartItem {
   selected: boolean;
 }
 
-interface Product {
-  id: number;
-  name: string;
-  image: string;
+export interface Product {
+  productId: number;
+  productName: string;
+  productImage: string;
   price: number;
   originalPrice?: number;
+  discount?: number; // Added
+  soldQuantity?: number; // Added
 }
 
 @Component({
@@ -31,8 +35,7 @@ interface Product {
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.scss']
 })
-export class CartComponent {
-  // Font Awesome icons
+export class CartComponent implements OnInit, OnDestroy {
   faCartShopping = faCartShopping;
   faTrash = faTrash;
   faMinus = faMinus;
@@ -41,53 +44,57 @@ export class CartComponent {
   faArrowLeft = faArrowLeft;
   faCartPlus = faCartPlus;
 
-  // Cart items
   cartItems: CartItem[] = [
     {
-      id: 1,
-      name: 'Sản phẩm mẫu 1',
-      image: 'https://via.placeholder.com/100',
+      productId: 1,
+      productName: 'Sản phẩm mẫu 1',
+      productImage: 'https://cdn1.viettelstore.vn/images/Product/ProductImage/medium/15-Ultra.Sil1.jpg',
       variant: 'Đen, 128GB',
-      price: 1000000,
-      originalPrice: 1200000,
+      price: 20_000_000,
+      originalPrice: 25_200_000,
       quantity: 1,
       selected: false
     },
     {
-      id: 2,
-      name: 'Sản phẩm mẫu 2',
-      image: 'https://via.placeholder.com/100',
-      price: 500000,
+      productId: 2,
+      productName: 'Sản phẩm mẫu 2',
+      productImage: 'https://aokhoacnam.vn/upload/product/akn-182/ao-khoac-gio-nam-ghi-chinh-hang.jpg',
+      price: 500_000,
       quantity: 2,
       selected: false
     }
   ];
 
-  // Recommended products
-  recommendedProducts: Product[] = [
-    {
-      id: 3,
-      name: 'Sản phẩm đề xuất 1',
-      image: 'https://via.placeholder.com/150',
-      price: 750000,
-      originalPrice: 900000
-    },
-    {
-      id: 4,
-      name: 'Sản phẩm đề xuất 2',
-      image: 'https://via.placeholder.com/150',
-      price: 300000
-    }
-  ];
+  couponCode = '';
+  couponMessage = '';
+  discount = 0;
+  shippingFee = 30_000;
 
-  // Coupon and summary
-  couponCode: string = '';
-  couponMessage: string = '';
-  discount: number = 0;
-  shippingFee: number = 30000;
+  recommendedProducts: Product[] = [];
+
+  private destroy$ = new Subject<void>();
+
+  constructor(private homeService: HomeService, private router: Router) {}
+
+  ngOnInit(): void {
+    this.loadRecommendedProducts();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   get allItemsSelected(): boolean {
     return this.cartItems.length > 0 && this.cartItems.every(item => item.selected);
+  }
+
+  hasSelectedItems(): boolean {
+    return this.cartItems.some(item => item.selected);
+  }
+
+  selectedItemsCount(): number {
+    return this.cartItems.filter(item => item.selected).length;
   }
 
   toggleSelectAll(): void {
@@ -97,14 +104,6 @@ export class CartComponent {
 
   toggleSelectItem(index: number): void {
     this.cartItems[index].selected = !this.cartItems[index].selected;
-  }
-
-  hasSelectedItems(): boolean {
-    return this.cartItems.some(item => item.selected);
-  }
-
-  selectedItemsCount(): number {
-    return this.cartItems.filter(item => item.selected).length;
   }
 
   getSubtotal(): number {
@@ -136,7 +135,6 @@ export class CartComponent {
   }
 
   applyCoupon(): void {
-    // Simulate coupon validation
     if (this.couponCode.toLowerCase() === 'discount10') {
       this.discount = this.getSubtotal() * 0.1;
       this.couponMessage = 'Áp dụng mã giảm giá thành công!';
@@ -146,24 +144,30 @@ export class CartComponent {
     }
   }
 
-  addToCart(product: Product): void {
-    const existingItem = this.cartItems.find(item => item.id === product.id);
-    if (existingItem) {
-      existingItem.quantity++;
-    } else {
-      this.cartItems.push({
-        ...product,
-        quantity: 1,
-        selected: false
-      });
+  proceedToCheckout(): void {
+    const selected = this.cartItems.filter(i => i.selected);
+    if (selected.length) {
+      console.log('Checkout với items:', selected);
+      // TODO: điều hướng sang trang thanh toán
     }
   }
 
-  proceedToCheckout(): void {
-    if (this.selectedItemsCount() > 0) {
-      console.log('Proceeding to checkout with selected items:',
-        this.cartItems.filter(item => item.selected));
-      // Add navigation to checkout page or API call here
-    }
+  loadRecommendedProducts(): void {
+    this.homeService.getRecommendedProducts()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (products: Product[]) => {
+          this.recommendedProducts = products;
+        },
+        error: err => console.error('Error loading recommended products:', err)
+      });
+  }
+
+  navigateToDetail(productId: number): void {
+    this.router.navigate(['/detail-product', productId]);
+  }
+
+  trackById(_: number, product: Product): number {
+    return product.productId;
   }
 }

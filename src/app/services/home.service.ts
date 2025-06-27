@@ -50,4 +50,8 @@ export class HomeService {
       .pipe(map(response => response.result));
   }
 
+  getRecommendedProducts(): Observable<Product[]> {
+    return this.httpClient.get<Product[]>(`${this.baseUrl}/recommended`); // Updated to use baseUrl
+  }
+
 }
