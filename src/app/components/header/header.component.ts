@@ -35,8 +35,8 @@ export class HeaderComponent implements OnInit {
 
   // User information
   myInfo: UserInfo = {
-    fullName: 'John Doe',
-    avatarUrl: 'https://i.pravatar.cc/150?img=12',
+    fullName: '',
+    avatarUrl: '',
     isVerified: true
   };
 

@@ -48,4 +48,16 @@ export class UserService {
     return this.httpClient.get<ApiResponse<UserResponse>>(`${this.baseUrl2}/myInfo`, { headers });
   }
 
+  getUserProfile(): Observable<UserResponse> {
+    const headers = this.getAuthHeaders();
+    return this.httpClient.get<User>(`${this.baseUrl2}/profile`, { headers });
+  }
+
+  getUserOrders(pageNumber: number, pageSize: number): Observable<{ result: Order[], totalPages: number }> {
+    const headers = this.getAuthHeaders();
+    return this.httpClient.get<{ result: Order[], totalPages: number }>(
+      `${this.baseUrl2}/orders?page=${pageNumber}&size=${pageSize}`, { headers }
+    );
+  }
+
 }
