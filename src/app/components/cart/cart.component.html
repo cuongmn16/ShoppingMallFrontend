@@ -1,12 +1,33 @@
-<div class="cart-container">
+<!-- cart.component.html -->
+
+<!-- ✅ TH1: Chưa đăng nhập -->
+<div *ngIf="!isLoggedIn" class="need-login">
+  <h2>Đăng nhập để xem giỏ hàng</h2>
+  <button routerLink="/login">Đăng nhập</button>
+</div>
+
+<!-- ✅ TH2: Đã đăng nhập nhưng giỏ hàng trống -->
+<div *ngIf="isLoggedIn && cartItems.length === 0" class="empty-cart">
+  <div class="empty-cart-content">
+    <fa-icon [icon]="faCartShopping" class="empty-cart-icon"></fa-icon>
+    <h2>Giỏ hàng của bạn đang trống</h2>
+    <p>Hãy thêm sản phẩm vào giỏ hàng để tiếp tục mua sắm</p>
+    <button class="continue-shopping-btn" [routerLink]="['/']">
+      <span>Tiếp tục mua sắm</span>
+      <fa-icon [icon]="faArrowRight"></fa-icon>
+    </button>
+  </div>
+</div>
+
+<!-- ✅ TH3: Đã đăng nhập và có sản phẩm -->
+<div class="cart-container" *ngIf="isLoggedIn && cartItems.length > 0">
   <div class="cart-header">
     <h1>Giỏ Hàng Của Bạn</h1>
     <p class="subtitle">{{ cartItems.length }} sản phẩm</p>
   </div>
 
-  <div class="cart-content" *ngIf="cartItems.length > 0">
+  <div class="cart-content">
     <div class="cart-items">
-      <!-- Select all checkbox -->
       <div class="select-all-container">
         <label class="custom-checkbox">
           <input type="checkbox"
@@ -20,7 +41,6 @@
         </button>
       </div>
 
-      <!-- Cart item list -->
       <div class="cart-item" *ngFor="let item of cartItems; let i = index">
         <div class="item-select">
           <label class="custom-checkbox">
@@ -84,7 +104,6 @@
       </div>
     </div>
 
-    <!-- Cart summary -->
     <div class="cart-summary">
       <div class="summary-header">
         <h2>Tóm Tắt Đơn Hàng</h2>
@@ -135,20 +154,7 @@
     </div>
   </div>
 
-  <!-- Empty cart state -->
-  <div class="empty-cart" *ngIf="cartItems.length === 0">
-    <div class="empty-cart-content">
-      <fa-icon [icon]="faCartShopping" class="empty-cart-icon"></fa-icon>
-      <h2>Giỏ hàng của bạn đang trống</h2>
-      <p>Hãy thêm sản phẩm vào giỏ hàng để tiếp tục mua sắm</p>
-      <button class="continue-shopping-btn" [routerLink]="['/']">
-        <span>Tiếp tục mua sắm</span>
-        <fa-icon [icon]="faArrowRight"></fa-icon>
-      </button>
-    </div>
-  </div>
-
-  <!-- Recommended products -->
+  <!-- Gợi ý sản phẩm -->
   <div class="recommended-products" *ngIf="recommendedProducts.length > 0">
     <h2>Có thể bạn cũng thích</h2>
     <div class="product-grid">
