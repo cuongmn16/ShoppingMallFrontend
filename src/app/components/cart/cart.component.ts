@@ -6,6 +6,9 @@ import { faCartShopping, faTrash, faMinus, faPlus, faArrowRight, faArrowLeft, fa
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Subject, takeUntil } from 'rxjs';
 import { HomeService } from '../../services/home.service';
+import {AuthService} from '../../services/auth.service';
+import {CartService} from '../../services/cart.service';
+import {OrderItemsResponse} from '../../models/response/cart-response';
 
 export interface CartItem {
   productId: number;
@@ -44,26 +47,9 @@ export class CartComponent implements OnInit, OnDestroy {
   faArrowLeft = faArrowLeft;
   faCartPlus = faCartPlus;
 
-  cartItems: CartItem[] = [
-    {
-      productId: 1,
-      productName: 'Sản phẩm mẫu 1',
-      productImage: 'https://cdn1.viettelstore.vn/images/Product/ProductImage/medium/15-Ultra.Sil1.jpg',
-      variant: 'Đen, 128GB',
-      price: 20_000_000,
-      originalPrice: 25_200_000,
-      quantity: 1,
-      selected: false
-    },
-    {
-      productId: 2,
-      productName: 'Sản phẩm mẫu 2',
-      productImage: 'https://aokhoacnam.vn/upload/product/akn-182/ao-khoac-gio-nam-ghi-chinh-hang.jpg',
-      price: 500_000,
-      quantity: 2,
-      selected: false
-    }
-  ];
+  isLoggedIn = false;
+
+  cartItems: CartItem[] = [];
 
   couponCode = '';
   couponMessage = '';
@@ -74,10 +60,37 @@ export class CartComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private homeService: HomeService, private router: Router) {}
+  constructor(private homeService: HomeService,
+              private router: Router,
+              private cartSvc: CartService,
+              private authSvc: AuthService,
+  ) {}
 
   ngOnInit(): void {
     this.loadRecommendedProducts();
+    this.isLoggedIn = this.authSvc.isLoggedIn();
+
+    if (!this.isLoggedIn) return;
+
+    this.cartSvc.getCart().subscribe({
+      next: cart => {
+        this.cartItems = cart.orderItems.map(i => ({
+          productId: i.productId,
+          productName: i.productName,
+          productImage: i.productImage,
+          price: i.price,
+          quantity: i.quantity,
+          selected: false
+        }));
+      },
+      error: err => {
+        console.error('Load cart failed', err);
+        if (err.status === 401) {
+          this.authSvc.logout();
+          this.router.navigate(['/login']);
+        }
+      }
+    });
   }
 
   ngOnDestroy(): void {
