@@ -72,8 +72,11 @@ export class CartComponent implements OnInit, OnDestroy {
 
     if (!this.isLoggedIn) return;
 
+    // @ts-ignore
+    // @ts-ignore
     this.cartSvc.getCart().subscribe({
       next: cart => {
+        // @ts-ignore
         this.cartItems = cart.orderItems.map(i => ({
           productId: i.productId,
           productName: i.productName,

@@ -1,7 +1,7 @@
 export interface OrderItemsRequest {
   productId: number;
+  variationId?: number | null;
   quantity: number;
-  variant?: string;
 }
 
 export interface OrderRequest {
