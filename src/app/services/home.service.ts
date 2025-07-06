@@ -4,6 +4,7 @@
   import {Category} from '../models/category';
   import {Product} from '../models/product';
   import {ProductDetail} from '../models/detail-product';
+  import { Paged } from '../models/paged';
 
   interface ApiResponse<T> {
     result: T;
@@ -24,14 +25,24 @@
         .pipe(map(response => response.result));
     }
 
-    getAllProducts(pageNumber: number, pageSize: number): Observable<ApiResponse<Product[]>> {
-      const params = { pageNumber: pageNumber.toString(), pageSize: pageSize.toString() };
-      return this.httpClient.get<ApiResponse<Product[]>>(this.baseUrl + '/products', { params });
+    getAllProducts(pageNumber: number, pageSize: number): Observable<Product[]> {
+      const params = { pageNumber, pageSize };
+      return this.httpClient
+        .get<{ code: number; result: { stats: any; products: Product[] } }>(
+          `${this.baseUrl}/products`, { params }
+        )
+        .pipe(map(res => res.result.products));   // <-- chỉ lấy mảng products
     }
 
-    getAllProductsByCategory(categoryId: number, pageNumber: number, pageSize: number): Observable<ApiResponse<Product[]>> {
-      const params = { pageNumber: pageNumber.toString(), pageSize: pageSize.toString() };
-      return this.httpClient.get<ApiResponse<Product[]>>(`${this.baseUrl}/products/category/${categoryId}`, { params });
+    getAllProductsByCategory(
+      id: number, pageNumber: number, pageSize: number
+    ): Observable<Product[]> {
+      const params = { pageNumber, pageSize };
+      return this.httpClient
+        .get<{ code: number; result: Product[] }>(
+          `${this.baseUrl}/products/category/${id}`, { params }
+        )
+        .pipe(map(res => res.result));
     }
 
     getProductDetail(productId: number): Observable<ApiResponse<ProductDetail>> {

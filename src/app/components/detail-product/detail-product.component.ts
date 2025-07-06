@@ -34,6 +34,7 @@ import {
 export class DetailProductComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
 
+  orderId!: number;
   productId!: number;
   productDetail!: ProductDetail;
   currentImage: string | null = null;
@@ -161,6 +162,7 @@ export class DetailProductComponent implements OnInit, OnDestroy {
   /** cart */
   addToCart() {
     this.cartService.addItem({
+      orderId: this.orderId,
       productId: this.productId,
       variationId: this.selectedVariation()?.id ?? null,
       quantity: this.quantity()
