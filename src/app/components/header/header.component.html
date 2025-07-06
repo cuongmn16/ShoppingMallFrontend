@@ -42,7 +42,7 @@
             <a href="/register" class="auth-link">Đăng Ký</a>
           </div>
           <!-- Trạng thái ĐÃ đăng nhập -->
-          <div *ngIf="isLoggedIn()" class="user-profile">
+          <div *ngIf="isLoggedIn()" class="user-profile" [routerLink]="'/profile'">
             <img
               class="avatar"
               alt="Avatar"

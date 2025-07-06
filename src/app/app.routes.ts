@@ -5,6 +5,7 @@ import {DetailProductComponent} from './components/detail-product/detail-product
 import {CartComponent} from './components/cart/cart.component';
 import {LogInComponent} from './components/log-in/log-in.component';
 import {AuthGuard} from './services/auth.guard';
+import {AccountManagementComponent} from './components/account-management/account-management.component';
 // import {LogInComponent} from './components/log-in/log-in.component';
 
 
@@ -13,6 +14,7 @@ export const routes: Routes = [
   { path: 'category/:categoryId', component: CategoryComponent },
   { path: 'detail-product/:productId', component: DetailProductComponent },
   { path: 'login', component : LogInComponent },
+  { path: 'profile', component: AccountManagementComponent},
   { path: 'cart', component: CartComponent },
   { path: 'cart', loadComponent: () => import('./components/cart/cart.component')
       .then(m => m.CartComponent),

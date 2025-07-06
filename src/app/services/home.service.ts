@@ -3,8 +3,9 @@
   import {map, Observable} from 'rxjs';
   import {Category} from '../models/category';
   import {Product} from '../models/product';
-  import {ProductDetail} from '../models/detail-product';
+
   import { Paged } from '../models/paged';
+  import {ProductDetail} from '../models/detail-product';
 
   interface ApiResponse<T> {
     result: T;
