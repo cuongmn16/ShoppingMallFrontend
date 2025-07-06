@@ -53,7 +53,7 @@ export class HomeComponent implements OnInit,OnDestroy  {
   }
 
 
-  loadProducts(pageNumber: number = this.pageNumber): void {
+  loadProducts(pageNumber = this.pageNumber): void {
     if (this.isLoading) return;
 
     this.isLoading = true;
@@ -64,18 +64,19 @@ export class HomeComponent implements OnInit,OnDestroy  {
       .getAllProducts(this.pageNumber, this.pageSize)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
-          this.products = response.result; // Replace products for the current page
-          this.totalPages = response.totalPages || this.estimateTotalPages(response.result.length);
-          this.isLoading = false;
+        next: (products) => {
+          this.products   = products;                     // mảng thuần
+          this.totalPages = this.estimateTotalPages(products.length);
+          this.isLoading  = false;
         },
-        error: (error) => {
-          this.error = 'Failed to load products. Please try again.';
-          console.error('Error fetching products:', error);
+        error: (err) => {
+          this.error = 'Failed to load products, try again.';
+          console.error(err);
           this.isLoading = false;
         }
       });
   }
+
 
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages && page !== this.pageNumber) {

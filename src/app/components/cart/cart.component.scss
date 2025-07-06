@@ -18,7 +18,7 @@ $color: #dc3545;
 
 // Shared Glass Style
 @mixin glass-card {
-  background: $bg-glass;
+  background: #f5f5f5;
   border: 1px solid $border-glass;
   border-radius: 20px;
   backdrop-filter: blur(12px);
@@ -33,7 +33,7 @@ $color: #dc3545;
   flex-direction: column;
   gap: 2rem;
   padding: 2rem;
-  background: linear-gradient(145deg, #16161a, #1e1e24);
+  background: linear-gradient(145deg, #5353ff, #e4ff42);
   min-height: 100vh;
 
   .cart-header {

@@ -1,177 +1,87 @@
-<!-- cart.component.html -->
+<div class="cart-container" *ngIf="isLoggedIn; else loginMessage">
+  <h2><fa-icon [icon]="faCartShopping"></fa-icon> Giỏ hàng của bạn</h2>
 
-<!-- ✅ TH1: Chưa đăng nhập -->
-<div *ngIf="!isLoggedIn" class="need-login">
-  <h2>Đăng nhập để xem giỏ hàng</h2>
-  <button routerLink="/login">Đăng nhập</button>
-</div>
+  <div *ngIf="cartItems.length === 0">Giỏ hàng của bạn đang trống.</div>
 
-<!-- ✅ TH2: Đã đăng nhập nhưng giỏ hàng trống -->
-<div *ngIf="isLoggedIn && cartItems.length === 0" class="empty-cart">
-  <div class="empty-cart-content">
-    <fa-icon [icon]="faCartShopping" class="empty-cart-icon"></fa-icon>
-    <h2>Giỏ hàng của bạn đang trống</h2>
-    <p>Hãy thêm sản phẩm vào giỏ hàng để tiếp tục mua sắm</p>
-    <button class="continue-shopping-btn" [routerLink]="['/']">
-      <span>Tiếp tục mua sắm</span>
-      <fa-icon [icon]="faArrowRight"></fa-icon>
+  <div *ngFor="let item of cartItems; index as i; trackBy: trackById" class="cart-item">
+    <input type="checkbox" [(ngModel)]="item.selected" />
+    <img [src]="item.productImage" [alt]="item.productName" />
+
+    <div class="item-info">
+      <h3 class="item-name">{{ item.productName }}</h3>
+
+      <p class="item-price-mobile">
+        {{ item.price | currency: 'VND':'symbol':'1.0-0' }}
+      </p>
+
+      <div class="item-price">
+        <p>{{ item.price | currency: 'VND':'symbol':'1.0-0' }}</p>
+        <p class="original-price" *ngIf="item.originalPrice">
+          {{ item.originalPrice | currency: 'VND':'symbol':'1.0-0' }}
+        </p>
+      </div>
+
+      <div class="quantity-controls">
+        <button (click)="decreaseQuantity(i)"><fa-icon [icon]="faMinus"></fa-icon></button>
+        <input type="number" [(ngModel)]="item.quantity" min="1" />
+        <button (click)="increaseQuantity(i)"><fa-icon [icon]="faPlus"></fa-icon></button>
+      </div>
+
+      <div class="item-total">
+        <p>
+          {{ item.price * item.quantity | currency: 'VND':'symbol':'1.0-0' }}
+        </p>
+        <button class="remove-btn" (click)="removeItem(i)">
+          <fa-icon [icon]="faTrash"></fa-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cart-actions" *ngIf="cartItems.length > 0">
+    <label>
+      <input type="checkbox" [checked]="allItemsSelected" (change)="toggleSelectAll()" />
+      Chọn tất cả
+    </label>
+    <button (click)="removeSelectedItems()" [disabled]="!hasSelectedItems()">Xóa đã chọn</button>
+  </div>
+
+  <div class="cart-summary" *ngIf="hasSelectedItems()">
+    <p>Tạm tính: {{ getSubtotal() | currency: 'VND':'symbol':'1.0-0' }}</p>
+    <p>Phí vận chuyển: {{ shippingFee | currency: 'VND':'symbol':'1.0-0' }}</p>
+
+    <div class="coupon-section">
+      <input [(ngModel)]="couponCode" placeholder="Nhập mã giảm giá" />
+      <button (click)="applyCoupon()">Áp dụng</button>
+      <p>{{ couponMessage }}</p>
+    </div>
+
+    <p>Giảm giá: {{ discount | currency: 'VND':'symbol':'1.0-0' }}</p>
+    <h3>Tổng cộng: {{ getTotal() | currency: 'VND':'symbol':'1.0-0' }}</h3>
+
+    <button class="checkout-btn" (click)="proceedToCheckout()">
+      <fa-icon [icon]="faArrowRight"></fa-icon> Thanh toán
     </button>
   </div>
-</div>
 
-<!-- ✅ TH3: Đã đăng nhập và có sản phẩm -->
-<div class="cart-container" *ngIf="isLoggedIn && cartItems.length > 0">
-  <div class="cart-header">
-    <h1>Giỏ Hàng Của Bạn</h1>
-    <p class="subtitle">{{ cartItems.length }} sản phẩm</p>
-  </div>
-
-  <div class="cart-content">
-    <div class="cart-items">
-      <div class="select-all-container">
-        <label class="custom-checkbox">
-          <input type="checkbox"
-                 [checked]="allItemsSelected"
-                 (change)="toggleSelectAll()">
-          <span class="checkmark"></span>
-          <span class="select-all-text">Chọn tất cả ({{ cartItems.length }})</span>
-        </label>
-        <button class="remove-selected" *ngIf="hasSelectedItems()" (click)="removeSelectedItems()">
-          <fa-icon [icon]="faTrash"></fa-icon> Xóa đã chọn
-        </button>
-      </div>
-
-      <div class="cart-item" *ngFor="let item of cartItems; let i = index">
-        <div class="item-select">
-          <label class="custom-checkbox">
-            <input type="checkbox"
-                   [checked]="item.selected"
-                   (change)="toggleSelectItem(i)">
-            <span class="checkmark"></span>
-          </label>
-        </div>
-
-        <div class="item-image">
-          <img [src]="item.productImage" [alt]="item.productName">
-        </div>
-
-        <div class="item-details">
-          <h3 class="item-name">{{ item.productName }}</h3>
-          <p class="item-variant" *ngIf="item.variant">{{ item.variant }}</p>
-          <p class="item-price-mobile">{{ item.price | currency:'VND':'symbol':'1.0-0' }}</p>
-          <div class="item-actions-mobile">
-            <div class="quantity-controls">
-              <button (click)="decreaseQuantity(i)" [disabled]="item.quantity <= 1">
-                <fa-icon [icon]="faMinus"></fa-icon>
-              </button>
-              <span>{{ item.quantity }}</span>
-              <button (click)="increaseQuantity(i)">
-                <fa-icon [icon]="faPlus"></fa-icon>
-              </button>
-            </div>
-            <button class="remove-item" (click)="removeItem(i)">
-              <fa-icon [icon]="faTrash"></fa-icon>
-            </button>
-          </div>
-        </div>
-
-        <div class="item-price">
-          <p>{{ item.price | currency:'VND':'symbol':'1.0-0' }}</p>
-          <p class="original-price" *ngIf="item.originalPrice">{{ item.originalPrice | currency:'VND':'symbol':'1.0-0' }}</p>
-        </div>
-
-        <div class="item-quantity">
-          <div class="quantity-controls">
-            <button (click)="decreaseQuantity(i)" [disabled]="item.quantity <= 1">
-              <fa-icon [icon]="faMinus"></fa-icon>
-            </button>
-            <span>{{ item.quantity }}</span>
-            <button (click)="increaseQuantity(i)">
-              <fa-icon [icon]="faPlus"></fa-icon>
-            </button>
-          </div>
-        </div>
-
-        <div class="item-total">
-          <p>{{ item.price * item.quantity | currency:'VND':'symbol':'1.0-0' }}</p>
-        </div>
-
-        <div class="item-actions">
-          <button class="remove-item" (click)="removeItem(i)">
-            <fa-icon [icon]="faTrash"></fa-icon>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="cart-summary">
-      <div class="summary-header">
-        <h2>Tóm Tắt Đơn Hàng</h2>
-      </div>
-
-      <div class="summary-content">
-        <div class="summary-row">
-          <span>Tạm tính ({{ selectedItemsCount() }} sản phẩm)</span>
-          <span>{{ getSubtotal() | currency:'VND':'symbol':'1.0-0' }}</span>
-        </div>
-
-        <div class="summary-row" *ngIf="discount > 0">
-          <span>Giảm giá</span>
-          <span>{{ discount | currency:'VND':'symbol':'1.0-0' }}</span>
-        </div>
-
-        <div class="summary-row">
-          <span>Phí vận chuyển</span>
-          <span *ngIf="shippingFee > 0">{{ shippingFee | currency:'VND':'symbol':'1.0-0' }}</span>
-          <span *ngIf="shippingFee === 0" class="free-shipping">Miễn phí</span>
-        </div>
-
-        <div class="coupon-section">
-          <div class="coupon-input">
-            <input type="text" placeholder="Mã giảm giá" [(ngModel)]="couponCode">
-            <button [disabled]="!couponCode" (click)="applyCoupon()">Áp dụng</button>
-          </div>
-          <p class="coupon-message" *ngIf="couponMessage">{{ couponMessage }}</p>
-        </div>
-
-        <div class="summary-total">
-          <span>Tổng thanh toán</span>
-          <span>{{ getTotal() | currency:'VND':'symbol':'1.0-0' }}</span>
-        </div>
-
-        <button class="checkout-button" [disabled]="selectedItemsCount() === 0" (click)="proceedToCheckout()">
-          <span>Thanh Toán</span>
-          <fa-icon [icon]="faArrowRight"></fa-icon>
-        </button>
-
-        <div class="continue-shopping">
-          <a [routerLink]="['/']">
-            <fa-icon [icon]="faArrowLeft"></fa-icon>
-            <span>Tiếp tục mua sắm</span>
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Gợi ý sản phẩm -->
-  <div class="recommended-products" *ngIf="recommendedProducts.length > 0">
-    <h2>Có thể bạn cũng thích</h2>
-    <div class="product-grid">
-      <div class="product-item" *ngFor="let product of recommendedProducts; trackBy: trackById">
-        <div (click)="navigateToDetail(product.productId)" class="product-item-id">
-          <img [src]="product.productImage" [alt]="product.productName">
-          <h3 class="product-name">{{ product.productName }}</h3>
-          <div class="item">
-            <div class="price-common">
-              <span class="price">{{ product.price | currency:'VND':'symbol':'1.0-0' }}</span>
-              <span class="discount" *ngIf="product.discount">{{ product.discount }}%</span>
-            </div>
-            <span class="sold-quantity" *ngIf="product.soldQuantity">{{ product.soldQuantity }}k bán</span>
-          </div>
-          <div class="rating">★★★★☆</div>
-        </div>
+  <div class="recommendations">
+    <h3><fa-icon [icon]="faCartPlus"></fa-icon> Có thể bạn sẽ thích</h3>
+    <div class="recommend-list">
+      <div
+        class="recommend-item"
+        *ngFor="let product of recommendedProducts"
+        (click)="navigateToDetail(product.productId)"
+      >
+        <img [src]="product.productImage" [alt]="product.productName" />
+        <p>{{ product.productName }}</p>
+        <p>{{ product.price | currency: 'VND':'symbol':'1.0-0' }}</p>
       </div>
     </div>
   </div>
 </div>
+
+<ng-template #loginMessage>
+  <div class="login-reminder">
+    <p>Vui lòng <a routerLink="/login">đăng nhập</a> để xem giỏ hàng của bạn.</p>
+  </div>
+</ng-template>

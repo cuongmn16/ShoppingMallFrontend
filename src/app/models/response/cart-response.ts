@@ -7,7 +7,16 @@ export interface OrderItemsResponse {
 }
 
 export interface CartResponse {
-  cartId: number;
-  userId: number;
-  orderItems: OrderItemsResponse[];
+  id: number;
+  orderId: number;
+  product: {
+    id: number;
+    name: string;
+    image: string;
+    price: number;
+    originalPrice?: number;
+  };
+  quantity: number;
+  // ... các trường khác nếu có
 }
+

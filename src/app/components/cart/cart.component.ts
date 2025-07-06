@@ -2,13 +2,21 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { faCartShopping, faTrash, faMinus, faPlus, faArrowRight, faArrowLeft, faCartPlus } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCartShopping,
+  faTrash,
+  faMinus,
+  faPlus,
+  faArrowRight,
+  faArrowLeft,
+  faCartPlus,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Subject, takeUntil } from 'rxjs';
 import { HomeService } from '../../services/home.service';
-import {AuthService} from '../../services/auth.service';
-import {CartService} from '../../services/cart.service';
-import {OrderItemsResponse} from '../../models/response/cart-response';
+import { AuthService } from '../../services/auth.service';
+import { CartService } from '../../services/cart.service';
+import { CartResponse } from '../../models/response/cart-response';
 
 export interface CartItem {
   productId: number;
@@ -27,8 +35,8 @@ export interface Product {
   productImage: string;
   price: number;
   originalPrice?: number;
-  discount?: number; // Added
-  soldQuantity?: number; // Added
+  discount?: number;
+  soldQuantity?: number;
 }
 
 @Component({
@@ -36,9 +44,10 @@ export interface Product {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, FontAwesomeModule],
   templateUrl: './cart.component.html',
-  styleUrls: ['./cart.component.scss']
+  styleUrls: ['./cart.component.scss'],
 })
 export class CartComponent implements OnInit, OnDestroy {
+  // FontAwesome icons
   faCartShopping = faCartShopping;
   faTrash = faTrash;
   faMinus = faMinus;
@@ -48,7 +57,6 @@ export class CartComponent implements OnInit, OnDestroy {
   faCartPlus = faCartPlus;
 
   isLoggedIn = false;
-
   cartItems: CartItem[] = [];
 
   couponCode = '';
@@ -57,43 +65,52 @@ export class CartComponent implements OnInit, OnDestroy {
   shippingFee = 30_000;
 
   recommendedProducts: Product[] = [];
+  private readonly destroy$ = new Subject<void>();
 
-  private destroy$ = new Subject<void>();
-
-  constructor(private homeService: HomeService,
-              private router: Router,
-              private cartSvc: CartService,
-              private authSvc: AuthService,
+  constructor(
+    private readonly homeService: HomeService,
+    private readonly router: Router,
+    private readonly cartSvc: CartService,
+    private readonly authSvc: AuthService,
   ) {}
 
+  // -------------------- Lifecycle --------------------
   ngOnInit(): void {
     this.loadRecommendedProducts();
     this.isLoggedIn = this.authSvc.isLoggedIn();
 
     if (!this.isLoggedIn) return;
 
-    // @ts-ignore
-    // @ts-ignore
-    this.cartSvc.getCart().subscribe({
-      next: cart => {
-        // @ts-ignore
-        this.cartItems = cart.orderItems.map(i => ({
-          productId: i.productId,
-          productName: i.productName,
-          productImage: i.productImage,
-          price: i.price,
-          quantity: i.quantity,
-          selected: false
-        }));
-      },
-      error: err => {
-        console.error('Load cart failed', err);
-        if (err.status === 401) {
-          this.authSvc.logout();
-          this.router.navigate(['/login']);
-        }
-      }
-    });
+    const userId = this.authSvc.getCurrentUserId();
+    if (userId == null) {
+      this.authSvc.logout();
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    this.cartSvc
+      .getCartByUser(userId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (order) => {
+          this.cartItems = order.orderItems.map<CartItem>((i: CartResponse) => ({
+            productId: i.product.id,
+            productName: i.product.name,
+            productImage: i.product.image,
+            price: i.product.price,
+            originalPrice: i.product.originalPrice,
+            quantity: i.quantity,
+            selected: false,
+          }));
+        },
+        error: (err) => {
+          console.error('Load cart failed', err);
+          if (err.status === 401) {
+            this.authSvc.logout();
+            this.router.navigate(['/login']);
+          }
+        },
+      });
   }
 
   ngOnDestroy(): void {
@@ -101,53 +118,66 @@ export class CartComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  // -------------------- Selection --------------------
   get allItemsSelected(): boolean {
-    return this.cartItems.length > 0 && this.cartItems.every(item => item.selected);
+    return this.cartItems.length > 0 && this.cartItems.every((item) => item.selected);
   }
 
   hasSelectedItems(): boolean {
-    return this.cartItems.some(item => item.selected);
+    return this.cartItems.some((item) => item.selected);
   }
 
   selectedItemsCount(): number {
-    return this.cartItems.filter(item => item.selected).length;
+    return this.cartItems.filter((item) => item.selected).length;
   }
 
   toggleSelectAll(): void {
     const allSelected = this.allItemsSelected;
-    this.cartItems.forEach(item => (item.selected = !allSelected));
+    this.cartItems.forEach((item) => (item.selected = !allSelected));
   }
 
   toggleSelectItem(index: number): void {
     this.cartItems[index].selected = !this.cartItems[index].selected;
   }
 
+  // -------------------- Quantity --------------------
+  increaseQuantity(index: number): void {
+    const item = this.cartItems[index];
+    item.quantity++;
+    this.cartSvc.updateItemQuantity(item.productId, item.quantity).subscribe();
+  }
+
+  decreaseQuantity(index: number): void {
+    const item = this.cartItems[index];
+    if (item.quantity > 1) {
+      item.quantity--;
+      this.cartSvc.updateItemQuantity(item.productId, item.quantity).subscribe();
+    }
+  }
+
+  // -------------------- Remove --------------------
+  removeItem(index: number): void {
+    const removed = this.cartItems.splice(index, 1)[0];
+    this.cartSvc.removeItem(removed.productId).subscribe();
+  }
+
+  removeSelectedItems(): void {
+    const ids = this.cartItems.filter((i) => i.selected).map((i) => i.productId);
+    this.cartItems = this.cartItems.filter((item) => !item.selected);
+    if (ids.length) {
+      this.cartSvc.removeItems(ids).subscribe();
+    }
+  }
+
+  // -------------------- Totals & Coupon --------------------
   getSubtotal(): number {
     return this.cartItems
-      .filter(item => item.selected)
+      .filter((item) => item.selected)
       .reduce((sum, item) => sum + item.price * item.quantity, 0);
   }
 
   getTotal(): number {
     return this.getSubtotal() + this.shippingFee - this.discount;
-  }
-
-  increaseQuantity(index: number): void {
-    this.cartItems[index].quantity++;
-  }
-
-  decreaseQuantity(index: number): void {
-    if (this.cartItems[index].quantity > 1) {
-      this.cartItems[index].quantity--;
-    }
-  }
-
-  removeItem(index: number): void {
-    this.cartItems.splice(index, 1);
-  }
-
-  removeSelectedItems(): void {
-    this.cartItems = this.cartItems.filter(item => !item.selected);
   }
 
   applyCoupon(): void {
@@ -160,22 +190,22 @@ export class CartComponent implements OnInit, OnDestroy {
     }
   }
 
+  // -------------------- Checkout --------------------
   proceedToCheckout(): void {
-    const selected = this.cartItems.filter(i => i.selected);
-    if (selected.length) {
-      console.log('Checkout với items:', selected);
-      // TODO: điều hướng sang trang thanh toán
-    }
+    const selected = this.cartItems.filter((i) => i.selected);
+    if (!selected.length) return;
+    console.log('Checkout items:', selected);
+    // TODO: điều hướng sang trang thanh toán
   }
 
+  // -------------------- Recommendation --------------------
   loadRecommendedProducts(): void {
-    this.homeService.getRecommendedProducts()
+    this.homeService
+      .getRecommendedProducts()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (products: Product[]) => {
-          this.recommendedProducts = products;
-        },
-        error: err => console.error('Error loading recommended products:', err)
+        next: (products: Product[]) => (this.recommendedProducts = products),
+        error: (err) => console.error('Error loading recommended products:', err),
       });
   }
 
@@ -183,7 +213,8 @@ export class CartComponent implements OnInit, OnDestroy {
     this.router.navigate(['/detail-product', productId]);
   }
 
-  trackById(_: number, product: Product): number {
-    return product.productId;
+  // -------------------- Utils --------------------
+  trackById(_: number, obj: Product | CartItem): number {
+    return 'productId' in obj ? obj.productId : (obj as CartItem).productId;
   }
 }

@@ -1,119 +1,162 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
-import { CartResponse } from '../models/response/cart-response';
-import { OrderRequest, OrderItemsRequest } from '../models/request/cart-request'; // Assuming you have this model
+import { Injectable } from "@angular/core";
+import {
+  HttpClient,
+  HttpParams,
+} from "@angular/common/http";
+import { map, Observable } from "rxjs";
 
-interface ApiResponse<T> {
+// 📝—— Models ————————————————————————————————————————
+import { CartResponse } from "../models/response/cart-response";
+import { OrderRequest, OrderItemsRequest } from "../models/request/cart-request";
+import { OrdersResponse } from '../models/response/order-response.model';
+
+/**
+ * Wrapper kiểu dữ liệu API chung của back‑end
+ */
+export interface ApiResponse<T> {
+  code: number;
   result: T;
-  code?: number;
   message?: string;
 }
 
-interface OrdersResponse {
-  id: number;
-  userId: number;
-  status: string;
-  shippingAddress?: string;
-  total: number;
-  discount?: number;
-  shippingFee?: number;
-  // orderItems: OrderItemsResponse[];
-}
-
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: "root" })
 export class CartService {
-  private baseUrl = 'http://localhost:8080/api/orders';
-  private baseUrl2 = 'http://localhost:8080/api/order-items';
+  /**
+   * Nên cấu hình baseApiUrl trong environment.ts để dễ switch PRODUCTION <‑> DEV
+   */
+  private readonly baseApi = "http://localhost:8080/api"; // TODO: move to env
 
-  constructor(private http: HttpClient) {}
+  private readonly ordersUrl = `${this.baseApi}/orders`;
+  private readonly orderItemsUrl = `${this.baseApi}/order-items`;
 
-  // Orders -----------------------------------------------------------
-  /** Get the user's cart (status = CART) */
-  getCart(userId: number, pageNumber: number = 1, pageSize: number = 10): Observable<OrdersResponse[]> {
+  constructor(private readonly http: HttpClient) {}
+
+  // #region Orders ————————————————————————————————————————————
+
+  /**
+   * Lấy giỏ hàng hiện tại của user (status = CART)
+   * Backend chỉ nên trả về *một* order ở trạng thái CART, nếu không hãy lấy phần tử đầu tiên.
+   */
+  getOrdersByUser(
+    userId: number,
+    pageNumber = 1,
+    pageSize = 20
+  ): Observable<OrdersResponse[]> {
+    const params = new HttpParams()
+      .set('pageNumber', pageNumber)
+      .set('pageSize', pageSize);
+
     return this.http
-      .get<ApiResponse<OrdersResponse[]>>(`${this.baseUrl}/user/${userId}?pageNumber=${pageNumber}&pageSize=${pageSize}`)
+      .get<ApiResponse<OrdersResponse[]>>(
+        `${this.ordersUrl}/user/${userId}`,
+        { params }
+      )
       .pipe(map(res => res.result));
   }
 
-  /** Get details of a specific order */
+  /**
+   * Lấy đơn hàng giỏ hàng (status = CART) theo userId qua API `/cart/{userId}`
+   */
+  getCartByUser(userId: number): Observable<OrdersResponse> {
+    return this.http.get<ApiResponse<OrdersResponse>>(`${this.ordersUrl}/cart/${userId}`)
+      .pipe(map(res => res.result));
+  }
+
+// 2. Hàm lấy GIỎ HÀNG (đơn có status = CART)
+  getCart(
+    userId: number,
+    pageNumber = 1,
+    pageSize = 20
+  ): Observable<OrdersResponse> {
+    return this.getOrdersByUser(userId, pageNumber, pageSize).pipe(
+      map((orders) => {
+        const cart = orders.find(o => o.status === 'CART');
+        if (!cart) {
+          throw new Error('No CART order found for user ' + userId);
+        }
+        return cart;
+      })
+    );
+  }
+
+  /**
+   * Chi tiết một order bất kỳ
+   */
   getOrderDetail(orderId: number): Observable<OrdersResponse> {
     return this.http
-      .get<ApiResponse<OrdersResponse>>(`${this.baseUrl}/${orderId}`)
+      .get<ApiResponse<OrdersResponse>>(`${this.ordersUrl}/${orderId}`)
+      .pipe(map((res) => res.result));
+  }
+
+  /**
+   * Tạo order mới – cần backend hỗ trợ và OrdersRequest model
+   */
+  createOrder(req: OrderRequest): Observable<OrdersResponse> {
+    return this.http
+      .post<ApiResponse<OrdersResponse>>(this.ordersUrl, req)
       .pipe(map(res => res.result));
   }
 
-  // /** Create a new order */
-  // createOrder(req: OrdersRequest): Observable<OrdersResponse> {
-  //   return this.http
-  //     .post<ApiResponse<OrdersResponse>>(this.baseUrl, req)
-  //     .pipe(map(res => res.result));
-  // }
-  //
-  // /** Update an existing order */
-  // updateOrder(orderId: number, req: OrdersRequest): Observable<OrdersResponse> {
-  //   return this.http
-  //     .put<ApiResponse<OrdersResponse>>(`${this.baseUrl}/${orderId}`, req)
-  //     .pipe(map(res => res.result));
-  // }
-
-  // Order Items -----------------------------------------------------------
-  /** Get all items for a specific order */
   getItemsByOrder(orderId: number): Observable<CartResponse[]> {
     return this.http
-      .get<ApiResponse<CartResponse[]>>(`${this.baseUrl2}/order/${orderId}`)
-      .pipe(map(res => res.result));
+      .get<ApiResponse<CartResponse[]>>(`${this.orderItemsUrl}/order/${orderId}`)
+      .pipe(map((res) => res.result));
   }
 
-  /** Get details of a specific item */
   getItemById(itemId: number): Observable<CartResponse> {
     return this.http
-      .get<ApiResponse<CartResponse>>(`${this.baseUrl2}/${itemId}`)
-      .pipe(map(res => res.result));
+      .get<ApiResponse<CartResponse>>(`${this.orderItemsUrl}/${itemId}`)
+      .pipe(map((res) => res.result));
   }
 
-  /** Add or update an item in the cart */
+  /**
+   * Thêm hoặc cập nhật item trong giỏ – truyền productId và quantity vào body
+   */
   addItem(req: OrderItemsRequest): Observable<CartResponse> {
     return this.http
-      .post<ApiResponse<CartResponse>>(`${this.baseUrl2}`, req)
-      .pipe(map(res => res.result));
+      .post<ApiResponse<CartResponse>>(this.orderItemsUrl, req)
+      .pipe(map((res) => res.result));
   }
 
-  /** Update item quantity */
-  updateItemQuantity(itemId: number, qty: number): Observable<CartResponse> {
+  updateItemQuantity(itemId: number, quantity: number): Observable<CartResponse> {
     return this.http
-      .put<ApiResponse<CartResponse>>(`${this.baseUrl2}/${itemId}`, { quantity: qty })
-      .pipe(map(res => res.result));
+      .put<ApiResponse<CartResponse>>(`${this.orderItemsUrl}/${itemId}`, { quantity })
+      .pipe(map((res) => res.result));
   }
 
-  /** Remove a single item from the cart */
   removeItem(itemId: number): Observable<CartResponse> {
     return this.http
-      .delete<ApiResponse<CartResponse>>(`${this.baseUrl2}/${itemId}`)
-      .pipe(map(res => res.result));
+      .delete<ApiResponse<CartResponse>>(`${this.orderItemsUrl}/${itemId}`)
+      .pipe(map((res) => res.result));
   }
 
-  /** Remove multiple items by IDs */
   removeItems(ids: number[]): Observable<CartResponse> {
     return this.http
-      .post<ApiResponse<CartResponse>>(`${this.baseUrl2}/delete-batch`, ids)
-      .pipe(map(res => res.result));
+      .post<ApiResponse<CartResponse>>(`${this.orderItemsUrl}/delete-batch`, ids)
+      .pipe(map((res) => res.result));
   }
 
-  // Coupon and Checkout -----------------------------------------------------------
-  /** Apply a coupon to the cart */
+  // #endregion
+
+  // #region Coupon / Checkout ————————————————————————————————————
+
   applyCoupon(orderId: number, couponCode: string): Observable<OrdersResponse> {
     return this.http
-      .post<ApiResponse<OrdersResponse>>(`${this.baseUrl}/${orderId}/apply-coupon`, { couponCode })
-      .pipe(map(res => res.result));
+      .post<ApiResponse<OrdersResponse>>(
+        `${this.ordersUrl}/${orderId}/apply-coupon`,
+        { couponCode },
+      )
+      .pipe(map((res) => res.result));
   }
 
-  /** Proceed to checkout for selected items */
   proceedToCheckout(orderId: number, selectedItemIds: number[]): Observable<OrdersResponse> {
     return this.http
-      .post<ApiResponse<OrdersResponse>>(`${this.baseUrl}/${orderId}/checkout`, { selectedItemIds })
-      .pipe(map(res => res.result));
+      .post<ApiResponse<OrdersResponse>>(
+        `${this.ordersUrl}/${orderId}/checkout`,
+        { selectedItemIds },
+      )
+      .pipe(map((res) => res.result));
   }
+
+  // #endregion
 }

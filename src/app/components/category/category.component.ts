@@ -5,6 +5,7 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {HomeService} from '../../services/home.service';
 import {CommonModule} from '@angular/common';
 import {Category} from '../../models/category';
+import { Paged } from '../../models/paged';
 
 @Component({
   selector: 'app-category',
@@ -47,7 +48,8 @@ export class CategoryComponent implements OnInit {
     }
   }
 
-  loadChildCategories(): void {
+
+loadChildCategories(): void {
     this.homeService.getCategoriesByParentId(this.categoryId).subscribe({
       next: (data: Category[]) => {
         this.categories = data;
@@ -85,21 +87,12 @@ export class CategoryComponent implements OnInit {
     this.error = null;
     this.pageNumber = pageNumber;
 
-    this.homeService
-      .getAllProductsByCategory(this.categoryId, this.pageNumber, this.pageSize)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          this.products = response.result; // Replace products for the current page
-          this.totalPages = response.totalPages || this.estimateTotalPages(response.result.length);
-          this.isLoading = false;
-        },
-        error: (error) => {
-          this.error = 'Failed to load products. Please try again.';
-          console.error('Error fetching products:', error);
-          this.isLoading = false;
-        }
-      });
+    this.homeService.getAllProductsByCategory(this.categoryId, this.pageNumber, this.pageSize).subscribe({
+      next: (products: Product[]) => {
+        this.products = products;
+        this.totalPages = this.estimateTotalPages(products.length);
+      }
+    });
   }
 
   // Category slider methods
