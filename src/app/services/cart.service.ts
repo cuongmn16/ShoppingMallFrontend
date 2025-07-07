@@ -1,18 +1,10 @@
 import { Injectable } from "@angular/core";
-import {
-  HttpClient,
-  HttpParams,
-} from "@angular/common/http";
+import { HttpClient, HttpParams } from "@angular/common/http";
 import { map, Observable } from "rxjs";
-
-// 📝—— Models ————————————————————————————————————————
 import { CartResponse } from "../models/response/cart-response";
-import { OrderRequest, OrderItemsRequest } from "../models/request/cart-request";
+import {OrderRequest, OrderItemsRequest, OrderItemsPatch} from "../models/request/cart-request";
 import { OrdersResponse } from '../models/response/order-response.model';
 
-/**
- * Wrapper kiểu dữ liệu API chung của back‑end
- */
 export interface ApiResponse<T> {
   code: number;
   result: T;
@@ -21,76 +13,52 @@ export interface ApiResponse<T> {
 
 @Injectable({ providedIn: "root" })
 export class CartService {
-  /**
-   * Nên cấu hình baseApiUrl trong environment.ts để dễ switch PRODUCTION <‑> DEV
-   */
   private readonly baseApi = "http://localhost:8080/api"; // TODO: move to env
-
   private readonly ordersUrl = `${this.baseApi}/orders`;
   private readonly orderItemsUrl = `${this.baseApi}/order-items`;
 
   constructor(private readonly http: HttpClient) {}
 
-  // #region Orders ————————————————————————————————————————————
-
-  /**
-   * Lấy giỏ hàng hiện tại của user (status = CART)
-   * Backend chỉ nên trả về *một* order ở trạng thái CART, nếu không hãy lấy phần tử đầu tiên.
-   */
   getOrdersByUser(
-    userId: number,
+    username: string,
     pageNumber = 1,
     pageSize = 20
   ): Observable<OrdersResponse[]> {
-    const params = new HttpParams()
-      .set('pageNumber', pageNumber)
-      .set('pageSize', pageSize);
-
-    return this.http
-      .get<ApiResponse<OrdersResponse[]>>(
-        `${this.ordersUrl}/user/${userId}`,
-        { params }
-      )
-      .pipe(map(res => res.result));
+    const params = new HttpParams({
+      fromObject: {
+        pageNumber: pageNumber.toString(),
+        pageSize  : pageSize.toString(),
+      }
+    });
+    const url = `${this.ordersUrl}/user/${encodeURIComponent(username)}`;
+    return this.http.get<ApiResponse<OrdersResponse[]>>(url, { params }).pipe(
+      map(res => res.result ?? []),
+    );
   }
 
-  /**
-   * Lấy đơn hàng giỏ hàng (status = CART) theo userId qua API `/cart/{userId}`
-   */
-  getCartByUser(userId: number): Observable<OrdersResponse> {
-    return this.http.get<ApiResponse<OrdersResponse>>(`${this.ordersUrl}/cart/${userId}`)
-      .pipe(map(res => res.result));
-  }
 
-// 2. Hàm lấy GIỎ HÀNG (đơn có status = CART)
   getCart(
-    userId: number,
+    username: string,
     pageNumber = 1,
     pageSize = 20
   ): Observable<OrdersResponse> {
-    return this.getOrdersByUser(userId, pageNumber, pageSize).pipe(
+    return this.getOrdersByUser(username, pageNumber, pageSize).pipe(
       map((orders) => {
         const cart = orders.find(o => o.status === 'CART');
         if (!cart) {
-          throw new Error('No CART order found for user ' + userId);
+          throw new Error('No CART order found for user ' + username);
         }
         return cart;
       })
     );
   }
 
-  /**
-   * Chi tiết một order bất kỳ
-   */
   getOrderDetail(orderId: number): Observable<OrdersResponse> {
     return this.http
       .get<ApiResponse<OrdersResponse>>(`${this.ordersUrl}/${orderId}`)
       .pipe(map((res) => res.result));
   }
 
-  /**
-   * Tạo order mới – cần backend hỗ trợ và OrdersRequest model
-   */
   createOrder(req: OrderRequest): Observable<OrdersResponse> {
     return this.http
       .post<ApiResponse<OrdersResponse>>(this.ordersUrl, req)
@@ -109,18 +77,15 @@ export class CartService {
       .pipe(map((res) => res.result));
   }
 
-  /**
-   * Thêm hoặc cập nhật item trong giỏ – truyền productId và quantity vào body
-   */
   addItem(req: OrderItemsRequest): Observable<CartResponse> {
     return this.http
       .post<ApiResponse<CartResponse>>(this.orderItemsUrl, req)
       .pipe(map((res) => res.result));
   }
 
-  updateItemQuantity(itemId: number, quantity: number): Observable<CartResponse> {
+  updateItem(itemId: number, req: Partial<OrderItemsRequest>): Observable<CartResponse> {
     return this.http
-      .put<ApiResponse<CartResponse>>(`${this.orderItemsUrl}/${itemId}`, { quantity })
+      .put<ApiResponse<CartResponse>>(`${this.orderItemsUrl}/${itemId}`, req)
       .pipe(map((res) => res.result));
   }
 
@@ -135,10 +100,6 @@ export class CartService {
       .post<ApiResponse<CartResponse>>(`${this.orderItemsUrl}/delete-batch`, ids)
       .pipe(map((res) => res.result));
   }
-
-  // #endregion
-
-  // #region Coupon / Checkout ————————————————————————————————————
 
   applyCoupon(orderId: number, couponCode: string): Observable<OrdersResponse> {
     return this.http
@@ -157,6 +118,4 @@ export class CartService {
       )
       .pipe(map((res) => res.result));
   }
-
-  // #endregion
 }

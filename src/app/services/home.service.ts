@@ -5,6 +5,7 @@
   import {Product} from '../models/product';
   import {ProductDetail} from '../models/detail-product';
   import { Paged } from '../models/paged';
+  import {response} from 'express';
 
   interface ApiResponse<T> {
     result: T;
@@ -62,7 +63,7 @@
     }
 
     getRecommendedProducts(): Observable<Product[]> {
-      return this.httpClient.get<Product[]>(`${this.baseUrl}/recommended`); // Updated to use baseUrl
+      return this.httpClient.get<{ code: number; result: Product[]}>(`${this.baseUrl}/products/recommended`)
+        .pipe(map(res => res.result));
     }
-
   }

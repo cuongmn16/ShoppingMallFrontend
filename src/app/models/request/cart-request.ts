@@ -12,3 +12,8 @@ export interface OrderItemsRequest {
   quantity: number;
   variationId?: number | null;
 }
+
+export interface OrderItemsPatch {          // kiểu PATCH linh hoạt
+  quantity?: number;
+  variationId?: number;
+}

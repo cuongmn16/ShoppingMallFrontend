@@ -2,13 +2,26 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
 
+interface JwtPayload {
+  username?: string;
+  preferred_username?: string;
+  email?: string;
+  exp?: number;
+  [key: string]: any;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly TOKEN_KEY = 'token';      // 🔑 khóa lưu JWT
+  private readonly TOKEN_KEY = 'token';
 
   constructor(private http: HttpClient) {}
 
-  /** Kiểm tra đã đăng nhập & token còn hạn */
+  /** Check if localStorage is available */
+  private hasLocalStorage(): boolean {
+    return typeof window !== 'undefined' && !!window.localStorage;
+  }
+
+  /** Check if logged in & token is valid */
   isLoggedIn(): boolean {
     const token = this.getToken();
     if (!token) return false;
@@ -18,37 +31,56 @@ export class AuthService {
       const now = Math.floor(Date.now() / 1000);
       return !payload.exp || payload.exp > now;
     } catch {
-      return false; // token hỏng format
+      return false;
     }
   }
 
-  /** Lấy JWT thô (hoặc null) */
+  /** Get raw JWT (or null) */
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    if (this.hasLocalStorage()) {
+      return localStorage.getItem(this.TOKEN_KEY);
+    }
+    return null;
   }
 
-  /** Lấy userId trong payload JWT; null nếu chưa đăng nhập */
-  getCurrentUserId(): number | null {
+  /** Decode JWT payload; return {} if error */
+  private decodeToken(): JwtPayload {
     const token = this.getToken();
-    if (!token) return null;
-
+    if (!token) return {};
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      // tuỳ thuộc backend: thường là 'userId' hoặc 'sub'
-      return payload.userId ?? payload.sub ?? null;
+      return JSON.parse(atob(token.split('.')[1]));
     } catch {
-      return null;
+      return {};
     }
   }
 
-  /** Gọi API login, lưu accessToken vào localStorage */
+  getCurrentUsername(): string | null {
+    const p = this.decodeToken();
+    return (
+      p['username'] ??
+      p['preferred_username'] ??
+      p['email'] ??
+      p['sub'] ??
+      null
+    );
+  }
+
+  /** Call login API, save accessToken to localStorage */
   login(username: string, password: string) {
     return this.http
       .post<{ accessToken: string }>('/api/auth/token', { username, password })
-      .pipe(tap(res => localStorage.setItem(this.TOKEN_KEY, res.accessToken)));
+      .pipe(
+        tap(res => {
+          if (this.hasLocalStorage()) {
+            localStorage.setItem(this.TOKEN_KEY, res.accessToken);
+          }
+        })
+      );
   }
 
   logout(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
+    if (this.hasLocalStorage()) {
+      localStorage.removeItem(this.TOKEN_KEY);
+    }
   }
 }

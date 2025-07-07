@@ -16,13 +16,15 @@ import { Subject, takeUntil } from 'rxjs';
 import { HomeService } from '../../services/home.service';
 import { AuthService } from '../../services/auth.service';
 import { CartService } from '../../services/cart.service';
-import { CartResponse } from '../../models/response/cart-response';
+import {OrdersResponse} from '../../models/response/order-response.model';
 
 export interface CartItem {
   productId: number;
   productName: string;
   productImage: string;
   variant?: string;
+  variationId?: number;
+  availableVariations?: { id: number; name: string }[];
   price: number;
   originalPrice?: number;
   quantity: number;
@@ -81,35 +83,43 @@ export class CartComponent implements OnInit, OnDestroy {
 
     if (!this.isLoggedIn) return;
 
-    const userId = this.authSvc.getCurrentUserId();
-    if (userId == null) {
-      this.authSvc.logout();
+    const username = this.authSvc.getCurrentUsername();
+    if (!username) {
       this.router.navigate(['/login']);
       return;
     }
 
-    this.cartSvc
-      .getCartByUser(userId)
+    this.loadCart(username);
+  }
+
+  loadCart(username: string): void {
+    this.cartSvc.getOrdersByUser(username, 1, 10)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (order) => {
-          this.cartItems = order.orderItems.map<CartItem>((i: CartResponse) => ({
-            productId: i.product.id,
-            productName: i.product.name,
-            productImage: i.product.image,
-            price: i.product.price,
-            originalPrice: i.product.originalPrice,
-            quantity: i.quantity,
-            selected: false,
+        next: (res) => {
+          /* ❶ Nếu BE trả mảng → dùng như cũ
+             ❷ Nếu BE trả object → ép thành mảng */
+          const orders: OrdersResponse[] =
+            Array.isArray(res) ? res : [res];
+
+          const cartOrder = orders.find(o => o.status === 'CART');
+          const items = Array.isArray(cartOrder?.orderItems)
+            ? cartOrder!.orderItems
+            : Object.values(cartOrder?.orderItems ?? {});  // nếu BE gửi object key‑value
+
+          this.cartItems = items.map<CartItem>((i: any) => ({
+            productId     : i.product?.id    ?? i.productId,
+            productName   : i.product?.name  ?? i.productName ?? 'N/A',
+            productImage  : i.product?.image ?? 'assets/img/no-image.png',
+            price         : i.product?.price ?? i.unitPrice  ?? 0,
+            originalPrice : i.product?.originalPrice ?? null,
+            quantity      : i.quantity ?? 1,
+            variationId   : i.variationId,
+            selected      : false,
+            availableVariations: i.product?.variations ?? [],
           }));
         },
-        error: (err) => {
-          console.error('Load cart failed', err);
-          if (err.status === 401) {
-            this.authSvc.logout();
-            this.router.navigate(['/login']);
-          }
-        },
+        error: () => { this.cartItems = []; }
       });
   }
 
@@ -140,19 +150,32 @@ export class CartComponent implements OnInit, OnDestroy {
     this.cartItems[index].selected = !this.cartItems[index].selected;
   }
 
-  // -------------------- Quantity --------------------
   increaseQuantity(index: number): void {
     const item = this.cartItems[index];
     item.quantity++;
-    this.cartSvc.updateItemQuantity(item.productId, item.quantity).subscribe();
+    this.cartSvc.updateItem(item.productId, {
+      quantity: item.quantity,
+      variationId: item.variationId
+    }).subscribe();
   }
 
   decreaseQuantity(index: number): void {
     const item = this.cartItems[index];
     if (item.quantity > 1) {
       item.quantity--;
-      this.cartSvc.updateItemQuantity(item.productId, item.quantity).subscribe();
+      this.cartSvc.updateItem(item.productId, {
+        quantity: item.quantity,
+        variationId: item.variationId
+      }).subscribe();
     }
+  }
+
+  onVariationChange(index: number): void {
+    const item = this.cartItems[index];
+    this.cartSvc.updateItem(item.productId, {
+      variationId: item.variationId,
+      quantity: item.quantity
+    }).subscribe();
   }
 
   // -------------------- Remove --------------------
@@ -200,12 +223,17 @@ export class CartComponent implements OnInit, OnDestroy {
 
   // -------------------- Recommendation --------------------
   loadRecommendedProducts(): void {
-    this.homeService
-      .getRecommendedProducts()
+    this.homeService.getRecommendedProducts()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (products: Product[]) => (this.recommendedProducts = products),
-        error: (err) => console.error('Error loading recommended products:', err),
+        next: (res: any) => {
+          this.recommendedProducts = Array.isArray(res)
+            ? res
+            : Array.isArray(res.products)
+              ? res.products
+              : [];
+        },
+        error: () => { this.recommendedProducts = []; }
       });
   }
 
