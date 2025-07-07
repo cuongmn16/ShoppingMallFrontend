@@ -1,47 +1,24 @@
+import {ProductStatus} from './product';
+
 export interface ProductDetail {
-  name: string;
-  mainImage: string;
-  images: string[];
-  originalPrice?: number;
+  productId: number;
+  sellerId: number;
+  categoryId: number;
+  productName: string;
+  description: string;
   price: number;
-  stock: number;
-  discountPercent?: number;
-
+  originalPrice: number;
+  discount: number;
+  stockQuantity: number;
+  soldQuantity: number;
   rating: number;
-  reviewCount: number;
-  soldCount: number;
-
-  /** Thuộc tính chung (hiển thị phần “Chi tiết sản phẩm”) */
-  attributes: { name: string; value: string }[];
-
-  /** Thuộc tính cho lọc size / color */
-  productAttributes: { attributeName: string; attributeValue: string }[];
-
-  /** Biến thể */
-  productVariations: ProductVariation[];
-
-  /** Review + breakdown */
-  reviews: Review[];
-  ratingBreakdown: ReviewBreakdown[];
-
-  /** Thông tin shop */
-  shopId: number;
+  productStatus: ProductStatus;
   shopName: string;
-  shopLogo?: string;
-  lastOnline?: string;
-  shopStats: {
-    reviews: number;
-    responseRate: number;
-    joinedTime: string;
-    products: number;
-    followers: number;
-  };
+  shopDescription: string;
+  shopLogo: string;
+  productImages: ProductImage[];
 
-  /** Mô tả HTML */
-  description?: string;
 }
-
-
 
 export interface ProductImage {
   imageId: number;
@@ -74,7 +51,6 @@ export interface VariationAttributes {
 }
 
 export interface ProductVariation {
-  /** Id biến thể (backend trả xuống) */
   id: number;
   /** Thuộc tính (size / color …) */
   attributes: VariationAttributes;

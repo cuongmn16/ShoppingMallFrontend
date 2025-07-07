@@ -66,4 +66,5 @@
       return this.httpClient.get<{ code: number; result: Product[]}>(`${this.baseUrl}/products/recommended`)
         .pipe(map(res => res.result));
     }
+
   }
