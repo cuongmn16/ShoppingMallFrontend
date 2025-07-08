@@ -4,7 +4,7 @@
     <nav class="breadcrumb">
       <a routerLink="/">Trang chủ</a> /
       <a routerLink="/category">Danh mục</a> /
-      <span>{{ product.name }}</span>
+      <span>{{ product.productName }}</span>
     </nav>
 
     <!-- Main Product Section -->
@@ -12,33 +12,33 @@
       <!-- Product Images -->
       <div class="product-images">
         <div class="main-image">
-          <img [src]="selectedImage" [alt]="product.name" (mouseover)="enableZoom($event)" (mouseleave)="disableZoom()">
+          <img [src]="selectedImage" [alt]="product.productName" (mouseover)="enableZoom($event)" (mouseleave)="disableZoom()">
           <div class="zoom-overlay" *ngIf="isZooming" [style.background-position]="zoomPosition"></div>
           <div class="image-badges">
             <span class="badge discount" *ngIf="product.discount > 0">-{{ product.discount }}%</span>
-            <span class="badge new" *ngIf="product.isNew">Mới</span>
+            <span class="badge new" >Mới</span>
           </div>
         </div>
 
         <div class="thumbnail-images">
           <div class="thumbnail-wrapper">
-            <img *ngFor="let image of product.images; let i = index"
-                 [src]="image"
-                 [alt]="product.name"
-                 [class.active]="selectedImage === image"
-                 (click)="selectImage(image)">
+            <img *ngFor="let image of product.productImages; let i = index"
+                 [src]="image.imageUrl"
+                 alt="ảnh"
+                 [class.active]="selectedImage === image.imageUrl"
+                 (click)="selectImage(image.imageUrl)">
           </div>
         </div>
 
-        <div class="video-section" *ngIf="product.video">
-          <video controls [src]="product.video" poster="{{ product.images[0] }}"></video>
+        <div class="video-section" *ngIf="product.productImages">
+          <video controls [src]="product.productImages" poster="{{ product.productImages }}"></video>
         </div>
       </div>
 
       <!-- Product Info -->
       <div class="product-info">
-        <h1 class="product-title">{{ product.name }}</h1>
-        <p class="product-description">{{ product.shortDescription }}</p>
+        <h1 class="product-title">{{ product.productName }}</h1>
+        <p class="product-description">{{ product.description }}</p>
 
         <!-- Rating -->
         <div class="rating-section">
@@ -46,14 +46,14 @@
           <span *ngFor="let star of [1,2,3,4,5]"
                 [class]="star <= product.rating ? 'star filled' : 'star'">★</span>
           </div>
-          <span class="rating-text">{{ product.rating }}/5 ({{ product.reviewCount }} đánh giá)</span>
+          <span class="rating-text">{{ product.rating }}/5 ( đánh giá)</span>
           <a href="#reviews" class="view-reviews">Xem đánh giá</a>
         </div>
 
         <!-- Price -->
         <div class="price-section">
-          <div class="current-price">{{ product.currentPrice | currency:'VND':'symbol':'1.0-0' }}</div>
-          <div class="original-price" *ngIf="product.originalPrice > product.currentPrice">
+          <div class="current-price">{{ product.originalPrice | currency:'VND':'symbol':'1.0-0' }}</div>
+          <div class="original-price" *ngIf="product.originalPrice > product.originalPrice">
             {{ product.originalPrice | currency:'VND':'symbol':'1.0-0' }}
           </div>
           <div class="discount-percent" *ngIf="product.discount > 0">
@@ -62,12 +62,12 @@
         </div>
 
         <!-- Vouchers -->
-        <div class="voucher-section" *ngIf="product.vouchers && product.vouchers.length > 0">
+        <div class="voucher-section" >
           <h4>Ưu đãi từ shop</h4>
           <div class="voucher-list">
-            <div *ngFor="let voucher of product.vouchers" class="voucher-item">
-              <span class="voucher-code">{{ voucher.code }}</span>
-              <span class="voucher-desc">{{ voucher.description }}</span>
+            <div >
+              <span class="voucher-code">30</span>
+              <span class="voucher-desc">siêu đặc biệt</span>
             </div>
           </div>
         </div>
@@ -78,9 +78,9 @@
           <div class="shipping-option">
             <span class="shipping-icon">🚚</span>
             <div class="shipping-details">
-              <div class="shipping-time">Giao hàng: {{ product.deliveryTime }}</div>
-              <div class="shipping-fee" [class.free]="product.shippingFee === 0">
-                {{ product.shippingFee === 0 ? 'Miễn phí ship' : (product.shippingFee | currency:'VND':'symbol':'1.0-0') }}
+              <div class="shipping-time">Giao hàng: </div>
+              <div class="shipping-fee" >
+
               </div>
             </div>
           </div>
@@ -96,12 +96,12 @@
         <!-- Product Variations -->
         <div class="variations-section">
           <div class="variation-group" *ngFor="let variation of product.variations">
-            <h4>{{ variation.name }}</h4>
+            <h4>{{ variation.sku }}</h4>
             <div class="variation-options">
-              <button *ngFor="let option of variation.options"
-                      [class]="'variation-option ' + (selectedVariations[variation.name] === option.value ? 'selected' : '')"
-                      (click)="selectVariation(variation.name, option.value)">
-                {{ option.label }}
+              <button *ngFor="let option of variation.optionInputs"
+                      [class]="'variation-option ' + (selectedVariations[variation.sku] === option.optionName ? 'selected' : '')"
+                      (click)="selectVariation(variation.sku, option.optionValue)">
+                {{ option.optionName }}
               </button>
             </div>
           </div>
@@ -113,10 +113,10 @@
             <label>Số lượng:</label>
             <div class="quantity-controls">
               <button (click)="decreaseQuantity()" [disabled]="quantity <= 1">-</button>
-              <input type="number" [(ngModel)]="quantity" min="1" [max]="product.stock">
-              <button (click)="increaseQuantity()" [disabled]="quantity >= product.stock">+</button>
+              <input type="number" [(ngModel)]="quantity" min="1" [max]="product.stockQuantity">
+              <button (click)="increaseQuantity()" [disabled]="quantity >= product.stockQuantity">+</button>
             </div>
-            <span class="stock-info">{{ product.stock }} có sẵn</span>
+            <span class="stock-info">{{ product.stockQuantity }} có sẵn</span>
           </div>
 
           <div class="action-buttons">
@@ -137,14 +137,14 @@
         <!-- Shop Info -->
         <div class="shop-section">
           <div class="shop-info">
-            <img [src]="product.shop.logo" [alt]="product.shop.name" class="shop-logo">
+            <img [src]="product.shopLogo" [alt]="product.shopName" class="shop-logo">
             <div class="shop-details">
-              <h4>{{ product.shop.name }}</h4>
+              <h4>{{ product.shopName }}</h4>
               <div class="shop-rating">
                 <span class="stars">★★★★☆</span>
-                <span>{{ product.shop.rating }}/5</span>
+                <span>{{ product.rating }}/5</span>
               </div>
-              <div class="shop-followers">{{ product.shop.followers }} người theo dõi</div>
+              <div class="shop-followers">{{ product.stockQuantity }} người theo dõi</div>
             </div>
           </div>
           <div class="shop-actions">
@@ -168,14 +168,14 @@
       <div class="tab-content">
         <!-- Description Tab -->
         <div *ngIf="activeTab === 0" class="tab-pane">
-          <div class="product-description-full" [innerHTML]="product.fullDescription"></div>
+          <div class="product-description-full" [innerHTML]="product.description"></div>
 
-          <div class="specifications" *ngIf="product.specifications">
+          <div class="specifications" >
             <h3>Thông số kỹ thuật</h3>
             <table class="specs-table">
-              <tr *ngFor="let spec of product.specifications">
-                <td class="spec-name">{{ spec.name }}</td>
-                <td class="spec-value">{{ spec.value }}</td>
+              <tr >
+                <td class="spec-name">name</td>
+                <td class="spec-value"></td>
               </tr>
             </table>
           </div>
@@ -188,7 +188,7 @@
               <div class="big-rating">{{ product.rating }}</div>
               <div class="rating-breakdown">
                 <div class="stars">★★★★★</div>
-                <div class="rating-count">{{ product.reviewCount }} đánh giá</div>
+                <div class="rating-count"> đánh giá</div>
               </div>
             </div>
 

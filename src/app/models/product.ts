@@ -1,3 +1,6 @@
+import {ProductImage} from './product-image';
+import {ProductVariation} from './product-variation';
+
 export enum ProductStatus {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
@@ -18,4 +21,9 @@ export interface Product {
   rating: number;
   productStatus: ProductStatus;
   productImage: string;
+  shopName: string;
+  shopDescription: string;
+  shopLogo: string;
+  productImages: ProductImage[];
+  variations: ProductVariation[];
 }

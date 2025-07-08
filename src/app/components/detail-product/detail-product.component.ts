@@ -1,50 +1,11 @@
 import {Component, OnInit} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {Product} from '../../models/product';
+import {HomeService} from '../../services/home.service';
+import {ActivatedRoute} from '@angular/router';
 
-export interface Product {
-  id: number;
-  name: string;
-  shortDescription: string;
-  fullDescription: string;
-  currentPrice: number;
-  originalPrice: number;
-  discount: number;
-  rating: number;
-  reviewCount: number;
-  isNew: boolean;
-  images: string[];
-  video?: string;
-  stock: number;
-  deliveryTime: string;
-  shippingFee: number;
-  variations: ProductVariation[];
-  specifications: ProductSpec[];
-  vouchers: Voucher[];
-  shop: Shop;
-}
 
-export interface ProductVariation {
-  name: string;
-  options: { label: string; value: string }[];
-}
-
-export interface ProductSpec {
-  name: string;
-  value: string;
-}
-
-export interface Voucher {
-  code: string;
-  description: string;
-}
-
-export interface Shop {
-  name: string;
-  logo: string;
-  rating: number;
-  followers: number;
-}
 
 export interface Review {
   userName: string;
@@ -75,79 +36,80 @@ export interface RelatedProduct {
   styleUrls: ['./detail-product.component.scss']
 })
 export class DetailProductComponent implements OnInit {
+  product! : Product;
   // Product data
-  product: Product = {
-    id: 1,
-    name: 'iPhone 14 Pro Max 128GB - Chính hãng VN/A',
-    shortDescription: 'Siêu phẩm iPhone 14 Pro Max với chip A16 Bionic mạnh mẽ, camera 48MP chuyên nghiệp, màn hình Dynamic Island đột phá.',
-    fullDescription: `
-      <h3>Điện thoại iPhone 14 Pro Max - Đỉnh cao công nghệ</h3>
-      <p>iPhone 14 Pro Max là chiếc smartphone cao cấp nhất trong series iPhone 14, mang đến trải nghiệm tuyệt vời với:</p>
-      <ul>
-        <li>Chip A16 Bionic 4nm tiên tiến nhất</li>
-        <li>Camera chính 48MP với chế độ Action Mode</li>
-        <li>Màn hình Super Retina XDR 6.7 inch với Dynamic Island</li>
-        <li>Pin sử dụng cả ngày dài</li>
-      </ul>
-    `,
-    currentPrice: 27990000,
-    originalPrice: 31990000,
-    discount: 12,
-    rating: 4.8,
-    reviewCount: 1247,
-    isNew: true,
-    images: [
-      'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500',
-      'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500',
-      'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=500',
-      'https://images.unsplash.com/photo-1556656793-08538906a9f8?w=500'
-    ],
-    video: 'https://www.w3schools.com/html/mov_bbb.mp4',
-    stock: 25,
-    deliveryTime: '2-3 ngày',
-    shippingFee: 0,
-    variations: [
-      {
-        name: 'Màu sắc',
-        options: [
-          { label: 'Tím Deep Purple', value: 'purple' },
-          { label: 'Vàng Gold', value: 'gold' },
-          { label: 'Bạc Silver', value: 'silver' },
-          { label: 'Đen Space Black', value: 'black' }
-        ]
-      },
-      {
-        name: 'Dung lượng',
-        options: [
-          { label: '128GB', value: '128gb' },
-          { label: '256GB', value: '256gb' },
-          { label: '512GB', value: '512gb' },
-          { label: '1TB', value: '1tb' }
-        ]
-      }
-    ],
-    specifications: [
-      { name: 'Màn hình', value: '6.7 inch Super Retina XDR' },
-      { name: 'Chip xử lý', value: 'A16 Bionic' },
-      { name: 'Camera sau', value: '48MP + 12MP + 12MP' },
-      { name: 'Camera trước', value: '12MP TrueDepth' },
-      { name: 'Pin', value: '4323 mAh' },
-      { name: 'Hệ điều hành', value: 'iOS 16' },
-      { name: 'Trọng lượng', value: '240g' },
-      { name: 'Kích thước', value: '160.7 x 77.6 x 7.85 mm' }
-    ],
-    vouchers: [
-      { code: 'SAVE500K', description: 'Giảm 500K cho đơn từ 20 triệu' },
-      { code: 'FREESHIP', description: 'Miễn phí vận chuyển toàn quốc' },
-      { code: 'TRADE10', description: 'Giảm thêm 10% khi thu cũ đổi mới' }
-    ],
-    shop: {
-      name: 'Apple Store Official',
-      logo: 'https://images.unsplash.com/photo-1621768216002-5ac171876625?w=100',
-      rating: 4.9,
-      followers: 125000
-    }
-  };
+  // product: Product = {
+  //   id: 1,
+  //   name: 'iPhone 14 Pro Max 128GB - Chính hãng VN/A',
+  //   shortDescription: 'Siêu phẩm iPhone 14 Pro Max với chip A16 Bionic mạnh mẽ, camera 48MP chuyên nghiệp, màn hình Dynamic Island đột phá.',
+  //   fullDescription: `
+  //     <h3>Điện thoại iPhone 14 Pro Max - Đỉnh cao công nghệ</h3>
+  //     <p>iPhone 14 Pro Max là chiếc smartphone cao cấp nhất trong series iPhone 14, mang đến trải nghiệm tuyệt vời với:</p>
+  //     <ul>
+  //       <li>Chip A16 Bionic 4nm tiên tiến nhất</li>
+  //       <li>Camera chính 48MP với chế độ Action Mode</li>
+  //       <li>Màn hình Super Retina XDR 6.7 inch với Dynamic Island</li>
+  //       <li>Pin sử dụng cả ngày dài</li>
+  //     </ul>
+  //   `,
+  //   currentPrice: 27990000,
+  //   originalPrice: 31990000,
+  //   discount: 12,
+  //   rating: 4.8,
+  //   reviewCount: 1247,
+  //   isNew: true,
+  //   images: [
+  //     'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500',
+  //     'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500',
+  //     'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=500',
+  //     'https://images.unsplash.com/photo-1556656793-08538906a9f8?w=500'
+  //   ],
+  //   video: 'https://www.w3schools.com/html/mov_bbb.mp4',
+  //   stock: 25,
+  //   deliveryTime: '2-3 ngày',
+  //   shippingFee: 0,
+  //   variations: [
+  //     {
+  //       name: 'Màu sắc',
+  //       options: [
+  //         { label: 'Tím Deep Purple', value: 'purple' },
+  //         { label: 'Vàng Gold', value: 'gold' },
+  //         { label: 'Bạc Silver', value: 'silver' },
+  //         { label: 'Đen Space Black', value: 'black' }
+  //       ]
+  //     },
+  //     {
+  //       name: 'Dung lượng',
+  //       options: [
+  //         { label: '128GB', value: '128gb' },
+  //         { label: '256GB', value: '256gb' },
+  //         { label: '512GB', value: '512gb' },
+  //         { label: '1TB', value: '1tb' }
+  //       ]
+  //     }
+  //   ],
+  //   specifications: [
+  //     { name: 'Màn hình', value: '6.7 inch Super Retina XDR' },
+  //     { name: 'Chip xử lý', value: 'A16 Bionic' },
+  //     { name: 'Camera sau', value: '48MP + 12MP + 12MP' },
+  //     { name: 'Camera trước', value: '12MP TrueDepth' },
+  //     { name: 'Pin', value: '4323 mAh' },
+  //     { name: 'Hệ điều hành', value: 'iOS 16' },
+  //     { name: 'Trọng lượng', value: '240g' },
+  //     { name: 'Kích thước', value: '160.7 x 77.6 x 7.85 mm' }
+  //   ],
+  //   vouchers: [
+  //     { code: 'SAVE500K', description: 'Giảm 500K cho đơn từ 20 triệu' },
+  //     { code: 'FREESHIP', description: 'Miễn phí vận chuyển toàn quốc' },
+  //     { code: 'TRADE10', description: 'Giảm thêm 10% khi thu cũ đổi mới' }
+  //   ],
+  //   shop: {
+  //     name: 'Apple Store Official',
+  //     logo: 'https://images.unsplash.com/photo-1621768216002-5ac171876625?w=100',
+  //     rating: 4.9,
+  //     followers: 125000
+  //   }
+  // };
 
   // Component state
   selectedImage: string = '';
@@ -159,6 +121,7 @@ export class DetailProductComponent implements OnInit {
   selectedLocation: string = '';
   activeTab: number = 0;
   selectedReviewFilter: string = 'all';
+  productId! : number;
 
   // Data arrays
   locations: Location[] = [
@@ -251,15 +214,26 @@ export class DetailProductComponent implements OnInit {
     }
   ];
 
-  constructor() { }
+  constructor(private homeService: HomeService,
+              private route : ActivatedRoute) { }
 
   ngOnInit(): void {
-    this.selectedImage = this.product.images[0];
-    this.filteredReviews = this.reviews;
+    this.productId = this.route.snapshot.params['productId'];
+    console.log('Product ID:', this.productId);
+    this.loadProductDetail();
 
-    // Initialize default variations
-    this.product.variations.forEach(variation => {
-      this.selectedVariations[variation.name] = variation.options[0].value;
+  }
+  loadProductDetail(): void {
+    this.homeService.getProductDetail(this.productId).subscribe(response => {
+      if (response && response.result) {
+        this.product = response.result;
+        this.selectedImage = this.product.productImages[0].imageUrl;
+        this.filteredReviews = this.reviews; // Initialize with all reviews
+      } else {
+        console.error('Product not found');
+      }
+    }, error => {
+      console.error('Error loading product detail:', error);
     });
   }
 
@@ -293,9 +267,9 @@ export class DetailProductComponent implements OnInit {
 
   // Quantity methods
   increaseQuantity(): void {
-    if (this.quantity < this.product.stock) {
-      this.quantity++;
-    }
+    // if (this.quantity < this.products.) {
+    //   this.quantity++;
+    // }
   }
 
   decreaseQuantity(): void {
@@ -307,7 +281,7 @@ export class DetailProductComponent implements OnInit {
   // Action methods
   addToCart(): void {
     const cartItem = {
-      product: this.product,
+
       quantity: this.quantity,
       selectedVariations: this.selectedVariations
     };
@@ -374,21 +348,21 @@ export class DetailProductComponent implements OnInit {
 
   // Share methods
   shareOnFacebook(): void {
-    const url = encodeURIComponent(window.location.href);
-    const title = encodeURIComponent(this.product.name);
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${title}`, '_blank');
+    // const url = encodeURIComponent(window.location.href);
+    // const title = encodeURIComponent(this.products.);
+    // window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${title}`, '_blank');
   }
 
   shareOnTwitter(): void {
-    const url = encodeURIComponent(window.location.href);
-    const title = encodeURIComponent(this.product.name);
-    window.open(`https://twitter.com/intent/tweet?url=${url}&text=${title}`, '_blank');
+    // const url = encodeURIComponent(window.location.href);
+    // const title = encodeURIComponent(this.product.name);
+    // window.open(`https://twitter.com/intent/tweet?url=${url}&text=${title}`, '_blank');
   }
 
   shareOnZalo(): void {
     const url = encodeURIComponent(window.location.href);
-    const title = encodeURIComponent(this.product.name);
-    window.open(`https://zalo.me/share?url=${url}&title=${title}`, '_blank');
+    // const title = encodeURIComponent(this.products[0]?. || '');
+    // window.open(`https://zalo.me/share?url=${url}&title=${title}`, '_blank');
   }
 
   copyLink(): void {
