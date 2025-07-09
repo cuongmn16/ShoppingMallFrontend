@@ -28,10 +28,7 @@
                  [class.active]="selectedImage === image.imageUrl"
                  (click)="selectImage(image.imageUrl)">
           </div>
-        </div>
 
-        <div class="video-section" *ngIf="product.productImages">
-          <video controls [src]="product.productImages" poster="{{ product.productImages }}"></video>
         </div>
       </div>
 
@@ -148,12 +145,13 @@
             </div>
           </div>
           <div class="shop-actions">
-            <button class="btn btn-outline" (click)="viewShop()">Xem shop</button>
+            <button class="btn btn-outline" [routerLink]="'/shop'">Xem shop</button>
             <button class="btn btn-outline" (click)="followShop()">Theo dõi</button>
           </div>
         </div>
       </div>
     </div>
+
 
     <!-- Product Details Tabs -->
     <div class="product-tabs">

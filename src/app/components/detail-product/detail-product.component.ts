@@ -3,7 +3,7 @@ import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Product} from '../../models/product';
 import {HomeService} from '../../services/home.service';
-import {ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, RouterModule} from '@angular/router';
 
 
 
@@ -31,7 +31,7 @@ export interface RelatedProduct {
 @Component({
   selector: 'app-detail-product',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,RouterModule],
   templateUrl: './detail-product.component.html',
   styleUrls: ['./detail-product.component.scss']
 })
@@ -301,11 +301,7 @@ export class DetailProductComponent implements OnInit {
     console.log('Wishlist toggled:', this.isInWishlist);
   }
 
-  // Shop methods
-  viewShop(): void {
-    console.log('View shop clicked');
-    // Navigate to shop page
-  }
+
 
   followShop(): void {
     console.log('Follow shop clicked');

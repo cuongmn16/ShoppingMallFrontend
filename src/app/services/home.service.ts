@@ -3,9 +3,6 @@
   import {map, Observable} from 'rxjs';
   import {Category} from '../models/category';
   import {Product} from '../models/product';
-  import {ProductDetail} from '../models/detail-product';
-  import { Paged } from '../models/paged';
-  import {response} from 'express';
 
   interface ApiResponse<T> {
     result: T;
@@ -46,8 +43,8 @@
         .pipe(map(res => res.result));
     }
 
-    getProductDetail(productId: number): Observable<ApiResponse<ProductDetail>> {
-      return this.httpClient.get<ApiResponse<ProductDetail>>(`${this.baseUrl}/products/${productId}`);
+    getProductDetail(productId: number): Observable<ApiResponse<Product>> {
+      return this.httpClient.get<ApiResponse<Product>>(`${this.baseUrl}/products/${productId}`);
     }
 
     getCategoriesByParentId(parentId: number): Observable<Category[]> {
