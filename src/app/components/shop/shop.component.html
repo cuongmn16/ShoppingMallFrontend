@@ -1,0 +1,253 @@
+<!-- Header -->
+<header class="header">
+  <div class="container">
+    <div class="header-top">
+      <div class="logo">
+        <h1>ShopVN</h1>
+      </div>
+      <div class="search-bar">
+        <input
+          type="text"
+          placeholder="Tìm kiếm sản phẩm..."
+          [(ngModel)]="searchQuery"
+          (keyup.enter)="searchProducts()"
+        >
+        <button (click)="searchProducts()">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+      <div class="user-actions">
+        <div class="cart" (click)="toggleCart()">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="cart-count">{{ cartItems.length }}</span>
+        </div>
+        <div class="user-menu">
+          <i class="fas fa-user"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+      <ul>
+        <li *ngFor="let category of categories"
+            [class.active]="selectedCategory === category.id"
+            (click)="filterByCategory(category.id)">
+          {{ category.name }}
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<!-- Main Banner -->
+<section class="banner">
+  <div class="container">
+    <div class="banner-slider">
+      <div class="banner-item" *ngFor="let banner of banners; let i = index"
+           [class.active]="currentBanner === i">
+        <img [src]="banner.image" [alt]="banner.title">
+        <div class="banner-content">
+          <h2>{{ banner.title }}</h2>
+          <p>{{ banner.description }}</p>
+          <button class="btn-primary">Mua ngay</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Flash Sale Section -->
+<section class="flash-sale">
+  <div class="container">
+    <div class="section-header">
+      <h2>
+        <i class="fas fa-bolt"></i>
+        Flash Sale
+      </h2>
+      <div class="countdown">
+        <span>Kết thúc trong:</span>
+        <div class="time">
+          <span>{{ flashSaleCountdown.hours }}</span>:
+          <span>{{ flashSaleCountdown.minutes }}</span>:
+          <span>{{ flashSaleCountdown.seconds }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="products-grid">
+      <div class="product-card flash-sale-item"
+           *ngFor="let product of flashSaleProducts"
+           (click)="viewProduct(product)">
+        <div class="product-image">
+          <img [src]="product.image" [alt]="product.name">
+          <div class="discount-badge">-{{ product.discount }}%</div>
+        </div>
+        <div class="product-info">
+          <h3>{{ product.name }}</h3>
+          <div class="price">
+            <span class="current-price">{{ product.salePrice | currency:'VND':'symbol':'1.0-0' }}</span>
+            <span class="original-price">{{ product.originalPrice | currency:'VND':'symbol':'1.0-0' }}</span>
+          </div>
+          <div class="rating">
+            <div class="stars">
+              <i class="fas fa-star" *ngFor="let star of getStars(product.rating)"></i>
+            </div>
+            <span>({{ product.reviews }})</span>
+          </div>
+          <div class="sold">Đã bán {{ product.sold }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Categories Section -->
+<section class="categories-section">
+  <div class="container">
+    <h2>Danh mục nổi bật</h2>
+    <div class="categories-grid">
+      <div class="category-item"
+           *ngFor="let category of featuredCategories"
+           (click)="filterByCategory(category.id)">
+        <div class="category-icon">
+          <i [class]="category.icon"></i>
+        </div>
+        <span>{{ category.name }}</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Products Section -->
+<section class="products-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Sản phẩm nổi bật</h2>
+      <div class="filters">
+        <select [(ngModel)]="sortBy" (change)="sortProducts()">
+          <option value="popular">Phổ biến</option>
+          <option value="newest">Mới nhất</option>
+          <option value="price-low">Giá thấp đến cao</option>
+          <option value="price-high">Giá cao đến thấp</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="products-grid">
+      <div class="product-card"
+           *ngFor="let product of filteredProducts"
+           (click)="viewProduct(product)">
+        <div class="product-image">
+          <img [src]="product.image" [alt]="product.name">
+          <div class="product-actions">
+            <button class="btn-favorite" (click)="toggleFavorite(product, $event)">
+              <i class="fas fa-heart" [class.active]="product.isFavorite"></i>
+            </button>
+            <button class="btn-quick-view" (click)="quickView(product, $event)">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <div class="product-info">
+          <h3>{{ product.name }}</h3>
+          <div class="price">
+            <span class="current-price">{{ product.price | currency:'VND':'symbol':'1.0-0' }}</span>
+            <span class="original-price" *ngIf="product.originalPrice">
+              {{ product.originalPrice | currency:'VND':'symbol':'1.0-0' }}
+            </span>
+          </div>
+          <div class="rating">
+            <div class="stars">
+              <i class="fas fa-star" *ngFor="let star of getStars(product.rating)"></i>
+            </div>
+            <span>({{ product.reviews }})</span>
+          </div>
+          <div class="location">{{ product.location }}</div>
+          <button class="btn-add-cart" (click)="addToCart(product, $event)">
+            Thêm vào giỏ
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="load-more" *ngIf="hasMoreProducts">
+      <button class="btn-secondary" (click)="loadMoreProducts()">
+        Xem thêm sản phẩm
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Cart Sidebar -->
+<div class="cart-sidebar" [class.open]="isCartOpen">
+  <div class="cart-header">
+    <h3>Giỏ hàng ({{ cartItems.length }})</h3>
+    <button class="close-btn" (click)="toggleCart()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <div class="cart-items">
+    <div class="cart-item" *ngFor="let item of cartItems">
+      <img [src]="item.image" [alt]="item.name">
+      <div class="item-details">
+        <h4>{{ item.name }}</h4>
+        <div class="item-price">{{ item.price | currency:'VND':'symbol':'1.0-0' }}</div>
+        <div class="quantity-controls">
+          <button (click)="updateQuantity(item, -1)">-</button>
+          <span>{{ item.quantity }}</span>
+          <button (click)="updateQuantity(item, 1)">+</button>
+        </div>
+      </div>
+      <button class="remove-btn" (click)="removeFromCart(item)">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="cart-footer" *ngIf="cartItems.length > 0">
+    <div class="total">
+      <strong>Tổng: {{ getCartTotal() | currency:'VND':'symbol':'1.0-0' }}</strong>
+    </div>
+    <button class="btn-checkout">Thanh toán</button>
+  </div>
+</div>
+
+<!-- Overlay -->
+<div class="overlay" [class.active]="isCartOpen" (click)="toggleCart()"></div>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>Về ShopVN</h4>
+        <ul>
+          <li>Giới thiệu</li>
+          <li>Tuyển dụng</li>
+          <li>Liên hệ</li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Hỗ trợ khách hàng</h4>
+        <ul>
+          <li>Trung tâm trợ giúp</li>
+          <li>Chính sách bảo hành</li>
+          <li>Chính sách đổi trả</li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Thanh toán</h4>
+        <div class="payment-methods">
+          <i class="fab fa-cc-visa"></i>
+          <i class="fab fa-cc-mastercard"></i>
+          <i class="fab fa-cc-paypal"></i>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024 ShopVN. Tất cả quyền được bảo lưu.</p>
+    </div>
+  </div>
+</footer>

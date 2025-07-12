@@ -3,9 +3,8 @@ import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Product} from '../../models/product';
 import {HomeService} from '../../services/home.service';
-import {ActivatedRoute, RouterModule} from '@angular/router';
-
-
+import {ActivatedRoute, Router, RouterModule} from '@angular/router';
+import {takeUntil, Subject} from 'rxjs';
 
 export interface Review {
   userName: string;
@@ -21,97 +20,18 @@ export interface Location {
   name: string;
 }
 
-export interface RelatedProduct {
-  id: number;
-  name: string;
-  image: string;
-  price: number;
-  reviewCount: number;
-}
+
 @Component({
   selector: 'app-detail-product',
   standalone: true,
-  imports: [CommonModule, FormsModule,RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './detail-product.component.html',
   styleUrls: ['./detail-product.component.scss']
 })
 export class DetailProductComponent implements OnInit {
-  product! : Product;
-  // Product data
-  // product: Product = {
-  //   id: 1,
-  //   name: 'iPhone 14 Pro Max 128GB - Chính hãng VN/A',
-  //   shortDescription: 'Siêu phẩm iPhone 14 Pro Max với chip A16 Bionic mạnh mẽ, camera 48MP chuyên nghiệp, màn hình Dynamic Island đột phá.',
-  //   fullDescription: `
-  //     <h3>Điện thoại iPhone 14 Pro Max - Đỉnh cao công nghệ</h3>
-  //     <p>iPhone 14 Pro Max là chiếc smartphone cao cấp nhất trong series iPhone 14, mang đến trải nghiệm tuyệt vời với:</p>
-  //     <ul>
-  //       <li>Chip A16 Bionic 4nm tiên tiến nhất</li>
-  //       <li>Camera chính 48MP với chế độ Action Mode</li>
-  //       <li>Màn hình Super Retina XDR 6.7 inch với Dynamic Island</li>
-  //       <li>Pin sử dụng cả ngày dài</li>
-  //     </ul>
-  //   `,
-  //   currentPrice: 27990000,
-  //   originalPrice: 31990000,
-  //   discount: 12,
-  //   rating: 4.8,
-  //   reviewCount: 1247,
-  //   isNew: true,
-  //   images: [
-  //     'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500',
-  //     'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500',
-  //     'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=500',
-  //     'https://images.unsplash.com/photo-1556656793-08538906a9f8?w=500'
-  //   ],
-  //   video: 'https://www.w3schools.com/html/mov_bbb.mp4',
-  //   stock: 25,
-  //   deliveryTime: '2-3 ngày',
-  //   shippingFee: 0,
-  //   variations: [
-  //     {
-  //       name: 'Màu sắc',
-  //       options: [
-  //         { label: 'Tím Deep Purple', value: 'purple' },
-  //         { label: 'Vàng Gold', value: 'gold' },
-  //         { label: 'Bạc Silver', value: 'silver' },
-  //         { label: 'Đen Space Black', value: 'black' }
-  //       ]
-  //     },
-  //     {
-  //       name: 'Dung lượng',
-  //       options: [
-  //         { label: '128GB', value: '128gb' },
-  //         { label: '256GB', value: '256gb' },
-  //         { label: '512GB', value: '512gb' },
-  //         { label: '1TB', value: '1tb' }
-  //       ]
-  //     }
-  //   ],
-  //   specifications: [
-  //     { name: 'Màn hình', value: '6.7 inch Super Retina XDR' },
-  //     { name: 'Chip xử lý', value: 'A16 Bionic' },
-  //     { name: 'Camera sau', value: '48MP + 12MP + 12MP' },
-  //     { name: 'Camera trước', value: '12MP TrueDepth' },
-  //     { name: 'Pin', value: '4323 mAh' },
-  //     { name: 'Hệ điều hành', value: 'iOS 16' },
-  //     { name: 'Trọng lượng', value: '240g' },
-  //     { name: 'Kích thước', value: '160.7 x 77.6 x 7.85 mm' }
-  //   ],
-  //   vouchers: [
-  //     { code: 'SAVE500K', description: 'Giảm 500K cho đơn từ 20 triệu' },
-  //     { code: 'FREESHIP', description: 'Miễn phí vận chuyển toàn quốc' },
-  //     { code: 'TRADE10', description: 'Giảm thêm 10% khi thu cũ đổi mới' }
-  //   ],
-  //   shop: {
-  //     name: 'Apple Store Official',
-  //     logo: 'https://images.unsplash.com/photo-1621768216002-5ac171876625?w=100',
-  //     rating: 4.9,
-  //     followers: 125000
-  //   }
-  // };
+  product!: Product;
 
-  // Component state
+  // UI state
   selectedImage: string = '';
   selectedVariations: { [key: string]: string } = {};
   quantity: number = 1;
@@ -121,7 +41,9 @@ export class DetailProductComponent implements OnInit {
   selectedLocation: string = '';
   activeTab: number = 0;
   selectedReviewFilter: string = 'all';
-  productId! : number;
+  productId!: number;
+  products: Product[] = [];
+  private destroy$ = new Subject<void>();
 
   // Data arrays
   locations: Location[] = [
@@ -183,58 +105,55 @@ export class DetailProductComponent implements OnInit {
     { star: 1, count: 7, percentage: 0.8 }
   ];
 
-  relatedProducts: RelatedProduct[] = [
-    {
-      id: 2,
-      name: 'iPhone 14 Pro 128GB',
-      image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=300',
-      price: 24990000,
-      reviewCount: 850
-    },
-    {
-      id: 3,
-      name: 'iPhone 14 128GB',
-      image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300',
-      price: 19990000,
-      reviewCount: 920
-    },
-    {
-      id: 4,
-      name: 'AirPods Pro 2',
-      image: 'https://images.unsplash.com/photo-1606220838315-056192d5e927?w=300',
-      price: 5990000,
-      reviewCount: 450
-    },
-    {
-      id: 5,
-      name: 'Apple Watch Ultra',
-      image: 'https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=300',
-      price: 18990000,
-      reviewCount: 320
-    }
-  ];
+  wishlistRelatedIds = new Set<number>();
 
   constructor(private homeService: HomeService,
-              private route : ActivatedRoute) { }
+              private route: ActivatedRoute,
+              private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.productId = this.route.snapshot.params['productId'];
     console.log('Product ID:', this.productId);
     this.loadProductDetail();
-
+    this.loadRecommendedProducts();
   }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadProductDetail(): void {
-    this.homeService.getProductDetail(this.productId).subscribe(response => {
-      if (response && response.result) {
-        this.product = response.result;
-        this.selectedImage = this.product.productImages[0].imageUrl;
-        this.filteredReviews = this.reviews; // Initialize with all reviews
-      } else {
-        console.error('Product not found');
+    this.homeService.getProductDetail(this.productId).subscribe({
+      next: (response: any) => {
+        if (response && response.result) {
+          this.product = response.result;
+          const firstImage = this.product?.productImages?.[0]?.imageUrl;
+          this.selectedImage = firstImage || '';
+          this.filteredReviews = this.reviews;
+        } else {
+          console.error('Product not found');
+        }
+      },
+      error: (error) => {
+        console.error('Error loading product detail:', error);
       }
-    }, error => {
-      console.error('Error loading product detail:', error);
     });
+  }
+
+  private loadRecommendedProducts(): void {
+    this.homeService
+      .getRecommendedProducts(6)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (products) => {
+          this.products = products;
+        },
+        error: (err) => {
+          console.error('Error fetching recommended products:', err);
+        }
+      });
   }
 
   // Image methods
@@ -261,15 +180,12 @@ export class DetailProductComponent implements OnInit {
   // Variation methods
   selectVariation(variationName: string, value: string): void {
     this.selectedVariations[variationName] = value;
-    // Here you would typically update price and images based on selected variation
     console.log('Selected variations:', this.selectedVariations);
   }
 
   // Quantity methods
   increaseQuantity(): void {
-    // if (this.quantity < this.products.) {
-    //   this.quantity++;
-    // }
+    // implement if needed
   }
 
   decreaseQuantity(): void {
@@ -278,21 +194,15 @@ export class DetailProductComponent implements OnInit {
     }
   }
 
-  // Action methods
+  // Actions
   addToCart(): void {
-    const cartItem = {
-
-      quantity: this.quantity,
-      selectedVariations: this.selectedVariations
-    };
+    const cartItem = { quantity: this.quantity, selectedVariations: this.selectedVariations };
     console.log('Adding to cart:', cartItem);
-    // Implement cart service call here
     alert('Đã thêm sản phẩm vào giỏ hàng!');
   }
 
   buyNow(): void {
     console.log('Buy now clicked');
-    // Implement direct purchase logic
     alert('Chuyển đến trang thanh toán...');
   }
 
@@ -301,17 +211,13 @@ export class DetailProductComponent implements OnInit {
     console.log('Wishlist toggled:', this.isInWishlist);
   }
 
-
-
   followShop(): void {
     console.log('Follow shop clicked');
-    // Implement follow shop logic
   }
 
   // Shipping methods
   calculateShipping(): void {
     console.log('Calculate shipping for location:', this.selectedLocation);
-    // Implement shipping calculation logic
   }
 
   // Tab methods
@@ -322,20 +228,19 @@ export class DetailProductComponent implements OnInit {
   // Review methods
   filterReviews(filter: string): void {
     this.selectedReviewFilter = filter;
-
     switch (filter) {
       case 'all':
         this.filteredReviews = this.reviews;
         break;
       case 'with-images':
-        this.filteredReviews = this.reviews.filter(review => review.images && review.images.length > 0);
+        this.filteredReviews = this.reviews.filter(r => r.images && r.images.length > 0);
         break;
       case '5':
       case '4':
       case '3':
       case '2':
       case '1':
-        this.filteredReviews = this.reviews.filter(review => review.rating === parseInt(filter));
+        this.filteredReviews = this.reviews.filter(r => r.rating === parseInt(filter, 10));
         break;
       default:
         this.filteredReviews = this.reviews;
@@ -343,41 +248,45 @@ export class DetailProductComponent implements OnInit {
   }
 
   // Share methods
-  shareOnFacebook(): void {
-    // const url = encodeURIComponent(window.location.href);
-    // const title = encodeURIComponent(this.products.);
-    // window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${title}`, '_blank');
-  }
-
-  shareOnTwitter(): void {
-    // const url = encodeURIComponent(window.location.href);
-    // const title = encodeURIComponent(this.product.name);
-    // window.open(`https://twitter.com/intent/tweet?url=${url}&text=${title}`, '_blank');
-  }
-
+  shareOnFacebook(): void {}
+  shareOnTwitter(): void {}
   shareOnZalo(): void {
     const url = encodeURIComponent(window.location.href);
-    // const title = encodeURIComponent(this.products[0]?. || '');
-    // window.open(`https://zalo.me/share?url=${url}&title=${title}`, '_blank');
   }
 
   copyLink(): void {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      alert('Đã sao chép link sản phẩm!');
-    }).catch(err => {
-      console.error('Could not copy text: ', err);
-    });
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => alert('Đã sao chép link sản phẩm!'))
+      .catch(err => console.error('Could not copy text: ', err));
   }
 
-  // Helper methods
+  // Helpers
   getStarArray(rating: number): boolean[] {
     return Array(5).fill(false).map((_, i) => i < rating);
   }
 
   formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(amount);
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   }
+
+  trackById(index: number, product: Product): number {
+    return product.productId;
+  }
+
+  NavigateToDetailProduct(productId: number){
+    this.router.navigate((['/detail-product', productId]));
+  }
+
+  toggleWishlistRelated(event: Event, productId: number): void {
+    event.stopPropagation(); // tránh trigger click trên card
+    if (this.wishlistRelatedIds.has(productId)) {
+      this.wishlistRelatedIds.delete(productId);
+    } else {
+      this.wishlistRelatedIds.add(productId);
+    }
+    console.log('Wishlist related toggled:', Array.from(this.wishlistRelatedIds));
+  }
+
+
+
 }

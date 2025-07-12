@@ -18,11 +18,6 @@
 
     constructor(private httpClient: HttpClient) { }
 
-    getAllCategories(): Observable<Category[]> {
-      return this.httpClient.get<{ code: number; result: Category[] }>(this.baseUrl + '/categories')
-        .pipe(map(response => response.result));
-    }
-
     getAllProducts(pageNumber: number, pageSize: number): Observable<Product[]> {
       const params = { pageNumber, pageSize };
       return this.httpClient
@@ -44,7 +39,8 @@
     }
 
     getProductDetail(productId: number): Observable<ApiResponse<Product>> {
-      return this.httpClient.get<ApiResponse<Product>>(`${this.baseUrl}/products/${productId}`);
+      return this.httpClient.
+      get<ApiResponse<Product>>(`${this.baseUrl}/products/${productId}`);
     }
 
     getCategoriesByParentId(parentId: number): Observable<Category[]> {
@@ -59,9 +55,15 @@
         .pipe(map(response => response.result));
     }
 
-    getRecommendedProducts(): Observable<Product[]> {
-      return this.httpClient.get<{ code: number; result: Product[]}>(`${this.baseUrl}/products/recommended`)
-        .pipe(map(res => res.result));
+    getRecommendedProducts(limit: number = 6) {
+      const params = { limit };
+      return this.httpClient
+        .get<{ code: number; message: string; result: { stats: any; products: Product[] } }>(
+          `${this.baseUrl}/products/recommended`,
+          { params }
+        )
+      .pipe(map(res => res.result.products));
     }
+
 
   }

@@ -8,38 +8,14 @@ import {
   faMinus,
   faPlus,
   faArrowRight,
-  faArrowLeft,
-  faCartPlus,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { Subject, takeUntil } from 'rxjs';
+import {Subject, takeUntil, catchError, of, finalize} from 'rxjs';
 import { HomeService } from '../../services/home.service';
 import { AuthService } from '../../services/auth.service';
 import { CartService } from '../../services/cart.service';
-import {OrdersResponse} from '../../models/response/order-response.model';
-
-export interface CartItem {
-  productId: number;
-  productName: string;
-  productImage: string;
-  variant?: string;
-  variationId?: number;
-  availableVariations?: { id: number; name: string }[];
-  price: number;
-  originalPrice?: number;
-  quantity: number;
-  selected: boolean;
-}
-
-export interface Product {
-  productId: number;
-  productName: string;
-  productImage: string;
-  price: number;
-  originalPrice?: number;
-  discount?: number;
-  soldQuantity?: number;
-}
+import { OrderItem, CartItem, OrdersResponse } from '../../models/orders.model';
+import { Product } from '../../models/product';
 
 @Component({
   selector: 'app-cart',
@@ -49,24 +25,24 @@ export interface Product {
   styleUrls: ['./cart.component.scss'],
 })
 export class CartComponent implements OnInit, OnDestroy {
-  // FontAwesome icons
-  faCartShopping = faCartShopping;
-  faTrash = faTrash;
-  faMinus = faMinus;
-  faPlus = faPlus;
-  faArrowRight = faArrowRight;
-  faArrowLeft = faArrowLeft;
-  faCartPlus = faCartPlus;
+  // Icons
+  readonly faCartShopping = faCartShopping;
+  readonly faTrash = faTrash;
+  readonly faMinus = faMinus;
+  readonly faPlus = faPlus;
+  readonly faArrowRight = faArrowRight;
 
+  // State
   isLoggedIn = false;
   cartItems: CartItem[] = [];
-
+  products: Product[] = [];
   couponCode = '';
   couponMessage = '';
   discount = 0;
-  shippingFee = 30_000;
+  isLoading = false;
+  error: string | null = null;
+  readonly shippingFee = 30_000;
 
-  recommendedProducts: Product[] = [];
   private readonly destroy$ = new Subject<void>();
 
   constructor(
@@ -76,51 +52,13 @@ export class CartComponent implements OnInit, OnDestroy {
     private readonly authSvc: AuthService,
   ) {}
 
-  // -------------------- Lifecycle --------------------
   ngOnInit(): void {
-    this.loadRecommendedProducts();
     this.isLoggedIn = this.authSvc.isLoggedIn();
+    this.loadRecommendedProducts();
 
-    if (!this.isLoggedIn) return;
-
-    const username = this.authSvc.getCurrentUsername();
-    if (!username) {
-      this.router.navigate(['/login']);
-      return;
+    if (this.isLoggedIn) {
+      this.loadCart();
     }
-
-    this.loadCart(username);
-  }
-
-  loadCart(username: string): void {
-    this.cartSvc.getOrdersByUser(username, 1, 10)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (res) => {
-          /* ❶ Nếu BE trả mảng → dùng như cũ
-             ❷ Nếu BE trả object → ép thành mảng */
-          const orders: OrdersResponse[] =
-            Array.isArray(res) ? res : [res];
-
-          const cartOrder = orders.find(o => o.status === 'CART');
-          const items = Array.isArray(cartOrder?.orderItems)
-            ? cartOrder!.orderItems
-            : Object.values(cartOrder?.orderItems ?? {});  // nếu BE gửi object key‑value
-
-          this.cartItems = items.map<CartItem>((i: any) => ({
-            productId     : i.product?.id    ?? i.productId,
-            productName   : i.product?.name  ?? i.productName ?? 'N/A',
-            productImage  : i.product?.image ?? 'assets/img/no-image.png',
-            price         : i.product?.price ?? i.unitPrice  ?? 0,
-            originalPrice : i.product?.originalPrice ?? null,
-            quantity      : i.quantity ?? 1,
-            variationId   : i.variationId,
-            selected      : false,
-            availableVariations: i.product?.variations ?? [],
-          }));
-        },
-        error: () => { this.cartItems = []; }
-      });
   }
 
   ngOnDestroy(): void {
@@ -128,121 +66,236 @@ export class CartComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  // -------------------- Cart Operations --------------------
+  private loadCart(): void {
+    const username = this.authSvc.getCurrentUsername();
+    if (!username) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    this.isLoading = true;
+    this.error = null;
+
+    this.cartSvc.getCart(username)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe({
+        next: (res: OrdersResponse) => {
+          console.log('📦 Response từ BE:', res);
+          const items = res.orderItems ?? [];
+          this.cartItems = items.map(item => this.mapOrderItemToCartItem(item));
+          console.log('🛒 cartItems sau map:', this.cartItems);
+        },
+        error: (err) => {
+          console.error('❌ Lỗi load giỏ hàng:', err);
+          this.error = 'Không thể tải giỏ hàng. Vui lòng thử lại.';
+        }
+      });
+  }
+
+  private mapOrderItemToCartItem(orderItem: OrderItem): CartItem {
+    // Backend của bạn có thể trả: product.image hoặc productImage
+    const rawImage =
+      (orderItem as any).product?.image ??
+      (orderItem as any).productImage ??
+      (orderItem as any).image;
+
+    return {
+      itemId: orderItem.itemId,
+      orderId: orderItem.orderId,
+      productId: orderItem.productId ?? (orderItem as any).productId,
+      productName: orderItem.productName ?? (orderItem as any).productName,
+      productImage: this.formatImageUrl(rawImage),
+      price: orderItem.unitPrice ?? (orderItem as any).unitPrice,
+      originalPrice: orderItem.product?.originalPrice,
+      quantity: orderItem.quantity,
+      variationId: orderItem.variationId,
+      selected: false,
+      availableVariations: orderItem.product?.variations ?? [],
+    };
+  }
+
+  private formatImageUrl(imageUrl?: string): string {
+    if (!imageUrl || imageUrl.trim() === '') {
+      return 'assets/img/no-image.jpg';
+    }
+
+    // Đã là URL đầy đủ -> dùng luôn
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+
+    // Ảnh nằm trong assets của FE
+    if (imageUrl.startsWith('assets/')) {
+      return imageUrl;
+    }
+
+    // Ảnh BE trả về kiểu /uploads/... hoặc uploads/...
+    if (imageUrl.includes('uploads/')) {
+      const cleanPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+      // TODO: đổi BASE_URL nếu backend chạy ở domain/port khác
+      return `http://localhost:8080${cleanPath}`;
+    }
+
+    // Fallback nếu BE trả chuỗi lạ
+    return 'assets/img/no-image.jpg';
+  }
+
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img && !img.src.includes('assets/img/no-image.jpg')) {
+      img.src = 'assets/img/no-image.jpg';
+    }
+  }
+
   // -------------------- Selection --------------------
   get allItemsSelected(): boolean {
-    return this.cartItems.length > 0 && this.cartItems.every((item) => item.selected);
+    return this.cartItems.length > 0 && this.cartItems.every(item => item.selected);
   }
 
   hasSelectedItems(): boolean {
-    return this.cartItems.some((item) => item.selected);
-  }
-
-  selectedItemsCount(): number {
-    return this.cartItems.filter((item) => item.selected).length;
+    return this.cartItems.some(item => item.selected);
   }
 
   toggleSelectAll(): void {
-    const allSelected = this.allItemsSelected;
-    this.cartItems.forEach((item) => (item.selected = !allSelected));
+    const selectAll = !this.allItemsSelected;
+    this.cartItems.forEach(item => item.selected = selectAll);
   }
 
-  toggleSelectItem(index: number): void {
-    this.cartItems[index].selected = !this.cartItems[index].selected;
-  }
-
-  increaseQuantity(index: number): void {
+  // -------------------- Quantity & Variation --------------------
+  private updateCartItem(index: number, updates: { quantity?: number; variationId?: number }): void {
     const item = this.cartItems[index];
-    item.quantity++;
-    this.cartSvc.updateItem(item.productId, {
-      quantity: item.quantity,
-      variationId: item.variationId
-    }).subscribe();
+    if (!item.itemId) return;
+
+    this.cartSvc.updateItem(item.itemId, updates)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          if (updates.quantity) item.quantity = updates.quantity;
+          if (updates.variationId !== undefined) item.variationId = updates.variationId;
+        },
+        error: console.error
+      });
   }
 
-  decreaseQuantity(index: number): void {
+  increaseQuantity(index: number) {
+    const item = this.cartItems[index];
+    const newQuantity = item.quantity + 1;
+
+    this.cartSvc.updateQuantity(item.itemId, newQuantity).subscribe(updatedItem => {
+      this.cartItems[index] = updatedItem; // cập nhật full object, không chỉ mỗi quantity
+    });
+  }
+
+  decreaseQuantity(index: number) {
     const item = this.cartItems[index];
     if (item.quantity > 1) {
-      item.quantity--;
-      this.cartSvc.updateItem(item.productId, {
-        quantity: item.quantity,
-        variationId: item.variationId
-      }).subscribe();
+      const newQuantity = item.quantity - 1;
+
+      this.cartSvc.updateQuantity(item.itemId, newQuantity).subscribe(updatedItem => {
+        this.cartItems[index] = updatedItem;
+      });
     }
   }
 
   onVariationChange(index: number): void {
     const item = this.cartItems[index];
-    this.cartSvc.updateItem(item.productId, {
-      variationId: item.variationId,
-      quantity: item.quantity
-    }).subscribe();
+    this.updateCartItem(index, { variationId: item.variationId, quantity: item.quantity });
   }
 
-  // -------------------- Remove --------------------
+  // -------------------- Remove Items --------------------
   removeItem(index: number): void {
     const removed = this.cartItems.splice(index, 1)[0];
-    this.cartSvc.removeItem(removed.productId).subscribe();
+    this.cartSvc.removeItem(removed.itemId!)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe();
   }
 
   removeSelectedItems(): void {
-    const ids = this.cartItems.filter((i) => i.selected).map((i) => i.productId);
-    this.cartItems = this.cartItems.filter((item) => !item.selected);
-    if (ids.length) {
-      this.cartSvc.removeItems(ids).subscribe();
+    const selectedIds = this.cartItems
+      .filter(i => i.selected && i.itemId != null)
+      .map(i => i.itemId as number);
+
+    if (selectedIds.length === 0) {
+      alert('Vui lòng chọn ít nhất 1 sản phẩm để xóa.');
+      return;
     }
+
+    this.cartSvc.removeItems(selectedIds)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          // Sau khi API thành công thì lọc lại danh sách
+          this.cartItems = this.cartItems.filter(i => !selectedIds.includes(i.itemId!));
+        },
+        error: (err) => {
+          console.error('Xóa giỏ hàng thất bại:', err);
+          alert('Không thể xóa sản phẩm. Vui lòng thử lại.');
+        }
+      });
   }
 
   // -------------------- Totals & Coupon --------------------
   getSubtotal(): number {
     return this.cartItems
-      .filter((item) => item.selected)
-      .reduce((sum, item) => sum + item.price * item.quantity, 0);
+      .filter(item => item.selected)
+      .reduce((sum, item) => sum + (item.price * item.quantity), 0);
   }
 
   getTotal(): number {
-    return this.getSubtotal() + this.shippingFee - this.discount;
+    return Math.max(0, this.getSubtotal() + this.shippingFee - this.discount);
   }
 
   applyCoupon(): void {
-    if (this.couponCode.toLowerCase() === 'discount10') {
-      this.discount = this.getSubtotal() * 0.1;
-      this.couponMessage = 'Áp dụng mã giảm giá thành công!';
-    } else {
-      this.discount = 0;
-      this.couponMessage = 'Mã giảm giá không hợp lệ';
-    }
+    const isValid = this.couponCode.toLowerCase() === 'discount10';
+    this.discount = isValid ? this.getSubtotal() * 0.1 : 0;
+    this.couponMessage = isValid ? 'Áp dụng mã giảm giá thành công!' : 'Mã giảm giá không hợp lệ';
   }
 
-  // -------------------- Checkout --------------------
-  proceedToCheckout(): void {
-    const selected = this.cartItems.filter((i) => i.selected);
-    if (!selected.length) return;
-    console.log('Checkout items:', selected);
-    // TODO: điều hướng sang trang thanh toán
-  }
-
-  // -------------------- Recommendation --------------------
-  loadRecommendedProducts(): void {
-    this.homeService.getRecommendedProducts()
+  // -------------------- Related Products --------------------
+  private loadRecommendedProducts(): void {
+    this.homeService
+      .getAllProducts(1, 6)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (res: any) => {
-          this.recommendedProducts = Array.isArray(res)
-            ? res
-            : Array.isArray(res.products)
-              ? res.products
-              : [];
+        next: (products) => {
+          this.products = products;
         },
-        error: () => { this.recommendedProducts = []; }
+        error: (err) => {
+          console.error('Error fetching recommended products:', err);
+        }
       });
   }
 
-  navigateToDetail(productId: number): void {
-    this.router.navigate(['/detail-product', productId]);
+  NavigateToDetailProduct(productId: number): void {
+    this.router.navigate((['/detail-product', productId]));
   }
 
   // -------------------- Utils --------------------
-  trackById(_: number, obj: Product | CartItem): number {
-    return 'productId' in obj ? obj.productId : (obj as CartItem).productId;
+  getVariationName(variationId: number, variations?: { id: number; name: string }[]): string {
+    const variation = variations?.find(v => v.id === variationId);
+    return variation?.name ?? 'N/A';
+  }
+
+  trackById(_: number, obj: any): number {
+    return obj.itemId ?? obj.productId ?? obj.id ?? 0;
+  }
+
+  proceedToCheckout(): void {
+    if (!this.isLoggedIn) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    const selectedItems = this.cartItems.filter(i => i.selected);
+    if (!selectedItems.length) {
+      alert('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán.');
+      return;
+    }
+
+    this.router.navigate(['/checkout']);
   }
 }

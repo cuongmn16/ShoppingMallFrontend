@@ -1,5 +1,5 @@
 <div class="content">
-  <div class="product-detail-container">
+  <div class="product-detail-container" *ngIf="product">
     <!-- Breadcrumb -->
     <nav class="breadcrumb">
       <a routerLink="/">Trang chủ</a> /
@@ -12,11 +12,12 @@
       <!-- Product Images -->
       <div class="product-images">
         <div class="main-image">
-          <img [src]="selectedImage" [alt]="product.productName" (mouseover)="enableZoom($event)" (mouseleave)="disableZoom()">
+          <img [src]="selectedImage" [alt]="product.productName" (mouseover)="enableZoom($event)"
+               (mouseleave)="disableZoom()">
           <div class="zoom-overlay" *ngIf="isZooming" [style.background-position]="zoomPosition"></div>
           <div class="image-badges">
             <span class="badge discount" *ngIf="product.discount > 0">-{{ product.discount }}%</span>
-            <span class="badge new" >Mới</span>
+            <span class="badge new">Mới</span>
           </div>
         </div>
 
@@ -59,10 +60,10 @@
         </div>
 
         <!-- Vouchers -->
-        <div class="voucher-section" >
+        <div class="voucher-section">
           <h4>Ưu đãi từ shop</h4>
           <div class="voucher-list">
-            <div >
+            <div>
               <span class="voucher-code">30</span>
               <span class="voucher-desc">siêu đặc biệt</span>
             </div>
@@ -75,8 +76,8 @@
           <div class="shipping-option">
             <span class="shipping-icon">🚚</span>
             <div class="shipping-details">
-              <div class="shipping-time">Giao hàng: </div>
-              <div class="shipping-fee" >
+              <div class="shipping-time">Giao hàng:</div>
+              <div class="shipping-fee">
 
               </div>
             </div>
@@ -91,7 +92,7 @@
         </div>
 
         <!-- Product Variations -->
-        <div class="variations-section">
+        <div class="variations-section" *ngIf="product.variations">
           <div class="variation-group" *ngFor="let variation of product.variations">
             <h4>{{ variation.sku }}</h4>
             <div class="variation-options">
@@ -132,7 +133,7 @@
         </div>
 
         <!-- Shop Info -->
-        <div class="shop-section">
+        <div class="shop-section" *ngIf="product.shopLogo && product.shopName">
           <div class="shop-info">
             <img [src]="product.shopLogo" [alt]="product.shopName" class="shop-logo">
             <div class="shop-details">
@@ -168,10 +169,10 @@
         <div *ngIf="activeTab === 0" class="tab-pane">
           <div class="product-description-full" [innerHTML]="product.description"></div>
 
-          <div class="specifications" >
+          <div class="specifications">
             <h3>Thông số kỹ thuật</h3>
             <table class="specs-table">
-              <tr >
+              <tr>
                 <td class="spec-name">name</td>
                 <td class="spec-value"></td>
               </tr>
@@ -253,8 +254,6 @@
             <h3>Bảo hành</h3>
             <ul>
               <li>Bảo hành chính hãng 12 tháng</li>
-              <li>Hỗ trợ kỹ thuật miễn phí</li>
-              <li>Đổi mới trong 7 ngày đầu</li>
             </ul>
           </div>
         </div>
@@ -264,29 +263,27 @@
     <!-- Related Products -->
     <div class="related-products">
       <h3>Sản phẩm liên quan</h3>
-      <div class="products-grid">
-        <div *ngFor="let relatedProduct of relatedProducts" class="product-card">
-          <img [src]="relatedProduct.image" [alt]="relatedProduct.name">
-          <h4>{{ relatedProduct.name }}</h4>
-          <div class="product-price">{{ relatedProduct.price | currency:'VND':'symbol':'1.0-0' }}</div>
-          <div class="product-rating">
-            <span class="stars">★★★★☆</span>
-            <span>({{ relatedProduct.reviewCount }})</span>
+      <div class="product-grid">
+        <div class="product-item" *ngFor="let product of products; trackBy: trackById">
+          <div (click)="NavigateToDetailProduct(product.productId)" class="product-item-id">
+            <img [src]="product.productImage" [alt]="product.productName">
+            <h3 class="product-name">{{ product.productName }}</h3>
+            <div class="item">
+              <div class="price-common">
+                <span class="price">{{ product.price }}Đ </span>
+                <span class="discount">{{ product.discount }}%</span>
+              </div>
+              <span class="sold-quantity">{{ product.soldQuantity }}k bán</span>
+            </div>
+            <div class="rating">★★★★☆</div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Share Section -->
-    <div class="share-section">
-      <h4>Chia sẻ sản phẩm</h4>
-      <div class="share-buttons">
-        <button class="share-btn facebook" (click)="shareOnFacebook()">Facebook</button>
-        <button class="share-btn twitter" (click)="shareOnTwitter()">Twitter</button>
-        <button class="share-btn zalo" (click)="shareOnZalo()">Zalo</button>
-        <button class="share-btn copy" (click)="copyLink()">Sao chép link</button>
-      </div>
-    </div>
   </div>
 
+  <!-- Loading state -->
+  <div *ngIf="!product" class="loading">
+    <p>Đang tải thông tin sản phẩm...</p>
+  </div>
 </div>

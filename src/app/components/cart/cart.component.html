@@ -1,4 +1,4 @@
-<div class="cart-container" *ngIf="isLoggedIn; else loginMessage">
+<div class="cart-container" *ngIf="isLoggedIn">
   <h2>
     <fa-icon [icon]="faCartShopping"></fa-icon>
     Giỏ hàng của bạn
@@ -7,13 +7,17 @@
   <div *ngIf="cartItems.length === 0">Giỏ hàng của bạn đang trống.</div>
 
   <div *ngIf="cartItems.length > 0">
-
-    <div *ngFor="let item of cartItems; index as i; trackBy: trackById" class="cart-item">
+    <div class="cart-item" *ngFor="let item of cartItems; index as i; trackBy: trackById">
       <input type="checkbox" [(ngModel)]="item.selected"/>
-      <img [src]="item.productImage" [alt]="item.productName"/>
+      <img [src]="item.productImage" [alt]="item.productName" (error)="onImageError($event)" width="100" height="100"/>
 
       <div class="item-info">
         <h3 class="item-name">{{ item.productName }}</h3>
+
+        <p class="selected-variation" *ngIf="item.variationId && item.availableVariations?.length">
+          <strong>Phân loại:</strong>
+          {{ getVariationName(item.variationId, item.availableVariations) }}
+        </p>
 
         <p class="item-price-mobile">
           {{ item.price | currency: 'VND':'symbol':'1.0-0' }}
@@ -27,34 +31,35 @@
         </div>
 
         <div class="quantity-controls">
-          <button (click)="decreaseQuantity(i)">
+          <button (click)="decreaseQuantity(i)" [disabled]="item.quantity <= 1">
             <fa-icon [icon]="faMinus"></fa-icon>
           </button>
-          <input type="number" [(ngModel)]="item.quantity" min="1"/>
+
+          <input
+            type="number"
+            [(ngModel)]="item.quantity"
+            [ngModelOptions]="{standalone: true}"
+            min="1"
+            readonly
+          />
+
           <button (click)="increaseQuantity(i)">
             <fa-icon [icon]="faPlus"></fa-icon>
           </button>
         </div>
 
         <div class="variation-select" *ngIf="item.availableVariations?.length">
-          <label>Phân loại:</label>
-          <select
-            [(ngModel)]="item.variationId"
-            (change)="onVariationChange(i)"
-          >
-            <option
-              *ngFor="let variation of item.availableVariations"
-              [value]="variation.id"
-            >
+          <label>Đổi phân loại:</label>
+          <select [(ngModel)]="item.variationId" (change)="onVariationChange(i)">
+            <option value="">-- Chọn phân loại --</option>
+            <option *ngFor="let variation of item.availableVariations" [value]="variation.id">
               {{ variation.name }}
             </option>
           </select>
         </div>
 
         <div class="item-total">
-          <p>
-            {{ item.price * item.quantity | currency: 'VND':'symbol':'1.0-0' }}
-          </p>
+          <p>{{ item.price * item.quantity | currency: 'VND':'symbol':'1.0-0' }}</p>
           <button class="remove-btn" (click)="removeItem(i)">
             <fa-icon [icon]="faTrash"></fa-icon>
           </button>
@@ -62,6 +67,7 @@
       </div>
     </div>
   </div>
+
   <div class="cart-actions" *ngIf="cartItems.length > 0">
     <label>
       <input type="checkbox" [checked]="allItemsSelected" (change)="toggleSelectAll()"/>
@@ -89,30 +95,23 @@
     </button>
   </div>
 
-  <div class="recommend-section" *ngIf="recommendedProducts?.length">
-    <h3>
-      <fa-icon [icon]="faCartPlus"></fa-icon>
-      You may also like
-    </h3>
-
-    <div class="recommend-list">
-      <div
-        class="recommend-card"
-        *ngFor="let product of recommendedProducts"
-        (click)="navigateToDetail(product.productId)"
-      >
-        <img [src]="product.productImage" [alt]="product.productName" />
-        <div class="recommend-info">
-          <h4>{{ product.productName }}</h4>
-          <div class="recommend-price">
-            <span>{{ product.price | currency: 'VND':'symbol':'1.0-0' }}</span>
-            <span *ngIf="product.discount" class="discount">-{{ product.discount }}%</span>
+  <!-- Sản phẩm liên quan (giống DetailProduct) -->
+  <div class="product-grid">
+    <div class="product-item" *ngFor="let product of products; trackBy: trackById">
+      <div (click)="NavigateToDetailProduct(product.productId)" class="product-item-id">
+        <img [src]="product.productImage" [alt]="product.productName">
+        <h3 class="product-name">{{ product.productName }}</h3>
+        <div class="item">
+          <div class="price-common">
+            <span class="price">{{ product.price }}Đ </span>
+            <span class="discount">{{ product.discount }}%</span>
           </div>
+          <span class="sold-quantity">{{ product.soldQuantity}}k bán</span>
         </div>
+        <div class="rating">★★★★☆</div>
       </div>
     </div>
   </div>
-
 </div>
 
 <ng-template #loginMessage>
@@ -120,3 +119,4 @@
     <p>Vui lòng <a routerLink="/login">đăng nhập</a> để xem giỏ hàng của bạn.</p>
   </div>
 </ng-template>
+

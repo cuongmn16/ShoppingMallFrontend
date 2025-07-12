@@ -41,16 +41,16 @@
 
   <section class="featured-products-grid">
     <h2>Featured Products</h2>
-    <div class="product-grid">
-      <div class="product-item" *ngFor="let product of products; trackBy: trackById">
-        <div (click)="NavigateToDetailProduct(product.productId)" class="product-item-id">
-          <img [src]="product.productImage" [alt]="product.productName">
-          <h3 class="product-name">{{ product.productName }}</h3>
-          <div class="item">
-            <div class="price-common">
-              <span class="price">{{ product.price }}Đ </span>
-              <span class="discount">{{ product.discount }}%</span>
-            </div>
+      <div class="product-grid">
+        <div class="product-item" *ngFor="let product of products; trackBy: trackById">
+          <div (click)="NavigateToDetailProduct(product.productId)" class="product-item-id">
+            <img [src]="product.productImage" [alt]="product.productName">
+            <h3 class="product-name">{{ product.productName }}</h3>
+            <div class="item">
+              <div class="price-common">
+                <span class="price">{{ product.price }}Đ </span>
+                <span class="discount">{{ product.discount }}%</span>
+              </div>
             <span class="sold-quantity">{{ product.soldQuantity}}k bán</span>
           </div>
           <div class="rating">★★★★☆</div>

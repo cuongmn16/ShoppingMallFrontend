@@ -1,9 +1,8 @@
 import { Injectable } from "@angular/core";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { map, Observable } from "rxjs";
-import { CartResponse } from "../models/response/cart-response";
-import {OrderRequest, OrderItemsRequest, OrderItemsPatch} from "../models/request/cart-request";
-import { OrdersResponse } from '../models/response/order-response.model';
+import { CartItem, OrdersResponse, OrderItem } from "../models/orders.model";
+import { OrderItemsRequest } from "../models/request/cart-request";
 
 export interface ApiResponse<T> {
   code: number;
@@ -19,11 +18,7 @@ export class CartService {
 
   constructor(private readonly http: HttpClient) {}
 
-  getOrdersByUser(
-    username: string,
-    pageNumber = 1,
-    pageSize = 20
-  ): Observable<OrdersResponse[]> {
+  getOrdersByUser(username: string, pageNumber = 1, pageSize = 20): Observable<OrdersResponse[]> {
     const params = new HttpParams({
       fromObject: {
         pageNumber: pageNumber.toString(),
@@ -37,11 +32,7 @@ export class CartService {
   }
 
 
-  getCart(
-    username: string,
-    pageNumber = 1,
-    pageSize = 20
-  ): Observable<OrdersResponse> {
+  getCart(username: string, pageNumber = 1, pageSize = 20): Observable<OrdersResponse> {
     return this.getOrdersByUser(username, pageNumber, pageSize).pipe(
       map((orders) => {
         const cart = orders.find(o => o.status === 'CART');
@@ -53,51 +44,31 @@ export class CartService {
     );
   }
 
-  getOrderDetail(orderId: number): Observable<OrdersResponse> {
+  updateItem(itemId: number, req: Partial<OrderItemsRequest>): Observable<OrdersResponse> {
     return this.http
-      .get<ApiResponse<OrdersResponse>>(`${this.ordersUrl}/${orderId}`)
+      .put<ApiResponse<OrdersResponse>>(`${this.orderItemsUrl}/${itemId}`, req)
       .pipe(map((res) => res.result));
   }
 
-  createOrder(req: OrderRequest): Observable<OrdersResponse> {
-    return this.http
-      .post<ApiResponse<OrdersResponse>>(this.ordersUrl, req)
+  updateQuantity(itemId: number, quantity: number): Observable<CartItem> {
+    return this.http.patch<{ result: CartItem }>(`${this.orderItemsUrl}/${itemId}/quantity`, { quantity })
       .pipe(map(res => res.result));
   }
 
-  getItemsByOrder(orderId: number): Observable<CartResponse[]> {
+
+  removeItem(itemId: number): Observable<OrdersResponse> {
     return this.http
-      .get<ApiResponse<CartResponse[]>>(`${this.orderItemsUrl}/order/${orderId}`)
+      .delete<ApiResponse<OrdersResponse>>(`${this.orderItemsUrl}/${itemId}`)
       .pipe(map((res) => res.result));
   }
 
-  getItemById(itemId: number): Observable<CartResponse> {
+  removeItems(ids: number[]): Observable<void> {
     return this.http
-      .get<ApiResponse<CartResponse>>(`${this.orderItemsUrl}/${itemId}`)
-      .pipe(map((res) => res.result));
-  }
-
-  addItem(req: OrderItemsRequest): Observable<CartResponse> {
-    return this.http
-      .post<ApiResponse<CartResponse>>(this.orderItemsUrl, req)
-      .pipe(map((res) => res.result));
-  }
-
-  updateItem(itemId: number, req: Partial<OrderItemsRequest>): Observable<CartResponse> {
-    return this.http
-      .put<ApiResponse<CartResponse>>(`${this.orderItemsUrl}/${itemId}`, req)
-      .pipe(map((res) => res.result));
-  }
-
-  removeItem(itemId: number): Observable<CartResponse> {
-    return this.http
-      .delete<ApiResponse<CartResponse>>(`${this.orderItemsUrl}/${itemId}`)
-      .pipe(map((res) => res.result));
-  }
-
-  removeItems(ids: number[]): Observable<CartResponse> {
-    return this.http
-      .post<ApiResponse<CartResponse>>(`${this.orderItemsUrl}/delete-batch`, ids)
+      .request<ApiResponse<void>>(
+        'delete',
+        `${this.orderItemsUrl}/delete-batch`,
+        { body: ids }
+      )
       .pipe(map((res) => res.result));
   }
 
